@@ -18,7 +18,7 @@
  *                  npx prisma init ( ! INICIALIAR O PRISMA NO PROJETO !)
  * 
  *      ******* Para realizar o sincronismo do prisma com o BD, devemos executar o seguinte comando:
- *                  npx prisma migrate devs
+ *                  npx prisma migrate dev
  * 
  * 
  * ************************
@@ -33,13 +33,12 @@
  app.use(cors())
  app.use(express.json())
 
- app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs))
 
- const routes = require('./routes/route.js')
+ const routes = require('./route/routes.js')
 
 
  // Prefixo base da API
-app.use('/v1/controle-pet', routes)
+app.use('/v1/infohub', routes)
 
 app.listen('8080',function(){
     console.log('API FUNCIONANDO AGUARDANDO REQUESIÇÕES CHEFE...')
