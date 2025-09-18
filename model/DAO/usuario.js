@@ -79,7 +79,7 @@ const deleteUsuario = async function (id) {
     }
 }
 
-const selectAllAnimal =  async function(){
+const selectAllUsuario =  async function(){
     try {
         let sql = `select * from tbl_animal`
 
@@ -95,7 +95,7 @@ const selectAllAnimal =  async function(){
     }
 }
 
-const selectByIdAnimal = async function(id){
+const selectByIdUsuario = async function(id){
     try {
         let idUsuario = id
         let sql = `select * from tbl_animal where id_animal = ${idUsuario}`
@@ -115,6 +115,6 @@ module.exports = {
     insertUsuario,
     updateUsuario,
     deleteUsuario,
-    selectAllAnimal,
-    selectByIdAnimal
+    selectAllUsuario,
+    selectByIdUsuario
 }
