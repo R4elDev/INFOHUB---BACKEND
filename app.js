@@ -18,7 +18,7 @@
  *                  npx prisma init ( ! INICIALIAR O PRISMA NO PROJETO !)
  * 
  *      ******* Para realizar o sincronismo do prisma com o BD, devemos executar o seguinte comando:
- *                  npx prisma migrate devs
+ *                  npx prisma migrate dev
  * 
  * 
  * ************************
