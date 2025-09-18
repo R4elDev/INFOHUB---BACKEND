@@ -10,6 +10,52 @@ const MESSAGE = require('../../modulo/config.js')
 // Import do DAO para realizar o CRUD no Banco de Dados
 const usuarioDAO = require('../../model/DAO/usuario.js')
 const bcrypt = require('bcrypt')
+const jwt = require("jsonwebtoken")
+
+const loginUsuario = async function(usuario, contentType) {
+    try {
+      if (contentType !== 'application/json') return MESSAGE.ERROR_CONTENT_TYPE;
+  
+      const { email, senha } = usuario;
+  
+      if (!email || !senha) return MESSAGE.ERROR_REQUIRED_FIELDS;
+  
+      // Busca usuário no banco
+      const resultUsuario = await usuarioDAO.findByEmail(email);
+      if (!resultUsuario || resultUsuario.length === 0) return MESSAGE.ERROR_NOT_FOUND;
+  
+      // Valida senha
+      const senhaValida = await bcrypt.compare(senha, resultUsuario.senha_hash);
+      if (!senhaValida) return MESSAGE.ERROR_INVALID_CREDENTIALS;
+  
+      // Gera token JWT
+      const token = jwt.sign(
+        {
+          id: resultUsuario.id_usuario,
+          email: resultUsuario.email,
+          perfil: resultUsuario.perfil
+        },
+        process.env.JWT_SECRET ,
+        { expiresIn: "1h" } 
+      );
+  
+      return {
+        status: true,
+        status_code: 200,
+        token,
+        usuario: {
+          id: resultUsuario.id_usuario,
+          nome: resultUsuario.nome,
+          email: resultUsuario.email,
+          perfil: resultUsuario.perfil
+        }
+      };
+  
+    } catch (error) {
+      console.error(error);
+      return MESSAGE.ERROR_INTERNAL_SERVER_CONTROLLER;
+    }
+}
 
 const inserirUsuario = async function (usuario,contentType){
     try {
