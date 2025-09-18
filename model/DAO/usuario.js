@@ -5,116 +5,131 @@
  ****************************************************************************************/
 
 // Import da biblioteca do PRISMA/CLIENT para executar scripts no Banco de Dados
-const { PrismaClient } = require('@prisma/client')
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
 
 
-//Instancia da classe do prisma client, para gerar um objeto
-const prisma = new PrismaClient()
-
-//Funcao para inserir um novo usuario
-
+// ================================ INSERT =================================
 const insertUsuario = async function (usuario) {
-    try{
-        let sql = `insert into tbl_usuario (nome,email,senha_hash,perfil)
-    values(
-        '${usuario.nome}',
-        '${usuario.email}',
-        '${usuario.senha_hash}',
-        '${usuario.perfil}'
-    );`
+    try {
+        let sql = `
+            INSERT INTO tbl_usuario (
+                nome, email, senha_hash, perfil, cpf, cnpj, data_nascimento
+            ) VALUES (
+                '${usuario.nome}',
+                '${usuario.email}',
+                '${usuario.senha_hash}',
+                '${usuario.perfil}',
+                '${usuario.cpf}',
+                '${usuario.cnpj}',
+                '${usuario.data_nascimento}'
+            );
+        `;
 
-        let result = await prisma.$executeRawUnsafe(sql)
+        let result = await prisma.$executeRawUnsafe(sql);
 
         if (result) {
-            let sqlSelect = `SELECT * from tbl_usuario where email = '${usuario.email}' ORDER BY id_usuario DESC LIMIT 1;`
+            let sqlSelect = `
+                SELECT * 
+                FROM tbl_usuario 
+                WHERE email = '${usuario.email}' 
+                ORDER BY id_usuario DESC 
+                LIMIT 1;
+            `;
 
-            let usuarioCriado = await prisma.$queryRawUnsafe(sqlSelect)
-            return usuarioCriado[0]
-        }else {
-            return false
+            let usuarioCriado = await prisma.$queryRawUnsafe(sqlSelect);
+            return usuarioCriado[0];
+        } else {
+            return false;
         }
     } catch (error) {
-        console.log("ERRO AO INSERIR USUARIO:", error)
-        return false
+        console.log("ERRO AO INSERIR USUARIO:", error);
+        return false;
     }
+};
 
-}
 
-const updateUsuario = async function (usuario) {  
+// ================================ UPDATE =================================
+const updateUsuario = async function (usuario) {
     try {
-        let sql = `update tbl_usuario set
-            nome = '${usuario.nome}',
-            email = '${usuario.email}',
-            senha_hash = '${usuario.senha_hash}',
-            perfil = '${usuario.perfil}'
-        where id_usuario = ${usuario.id_usuario}`
+        let sql = `
+            UPDATE tbl_usuario SET
+                nome = '${usuario.nome}',
+                email = '${usuario.email}',
+                senha_hash = '${usuario.senha_hash}',
+                perfil = '${usuario.perfil}',
+                cpf = '${usuario.cpf}',
+                cnpj = '${usuario.cnpj}',
+                data_nascimento = '${usuario.data_nascimento}'
+            WHERE id_usuario = ${usuario.id_usuario};
+        `;
 
-        let result = await prisma.$executeRawUnsafe(sql)
-        if (result) {
-            return true
-        } else {
-            return false
-        }
-    }catch(error){
-        console.log("ERRO AO ATUALIZAR USUARIO:", error)
-        return false
+        let result = await prisma.$executeRawUnsafe(sql);
+        return result ? true : false;
+    } catch (error) {
+        console.log("ERRO AO ATUALIZAR USUARIO:", error);
+        return false;
     }
-}
+};
 
+
+// ================================ DELETE =================================
 const deleteUsuario = async function (id) {
     try {
-        let idUsuario = id
-        let sql = `delete from tbl_usuario where id_usuario = ${idUsuario}`
-
-        let result = await prisma.$executeRawUnsafe(sql)
-
-        if(result){
-            return true
-        }else {
-            return false
-        }
-    }catch(error){
-        console.log("ERRO AO DELETAR USUARIO:", error)
-        return false
+        let sql = `DELETE FROM tbl_usuario WHERE id_usuario = ${id}`;
+        let result = await prisma.$executeRawUnsafe(sql);
+        return result ? true : false;
+    } catch (error) {
+        console.log("ERRO AO DELETAR USUARIO:", error);
+        return false;
     }
-}
+};
 
-const selectAllUsuario =  async function(){
+
+// ================================ SELECT ALL =================================
+const selectAllUsuario = async function () {
     try {
-        let sql = `select * from tbl_animal`
-
-        let result = await prisma.$queryRawUnsafe(sql)
-
-        if(result){
-            return result
-        }else {
-            return false
-        }
-    }catch(error){
-        return false
+        let sql = `SELECT * FROM tbl_usuario`;
+        let result = await prisma.$queryRawUnsafe(sql);
+        return result && result.length > 0 ? result : false;
+    } catch (error) {
+        console.log("ERRO AO LISTAR USUARIOS:", error);
+        return false;
     }
-}
+};
 
-const selectByIdUsuario = async function(id){
+
+// ================================ SELECT BY ID =================================
+const selectByIdUsuario = async function (id) {
     try {
-        let idUsuario = id
-        let sql = `select * from tbl_animal where id_animal = ${idUsuario}`
-
-        let result = await prisma.$queryRawUnsafe(sql)
-
-        if(result){
-            return result
-        }else {
-            return false
-        }
-    }catch(error){
-        return false
+        let sql = `SELECT * FROM tbl_usuario WHERE id_usuario = ${id}`;
+        let result = await prisma.$queryRawUnsafe(sql);
+        return result && result.length > 0 ? result[0] : false;
+    } catch (error) {
+        console.log("ERRO AO BUSCAR USUARIO POR ID:", error);
+        return false;
     }
-}
+};
+
+// ================================ SELECT BY EMAIL =================================
+const selectByEmailUsuario = async function (email) {
+    try {
+        let sql = `SELECT * FROM tbl_usuario WHERE email = '${email}'`;
+        let result = await prisma.$queryRawUnsafe(sql);
+        return result && result.length > 0 ? result[0] : false;
+    } catch (error) {
+        console.log("ERRO AO BUSCAR USUARIO POR ID:", error);
+        return false;
+    }
+};
+
+
+// ================================ EXPORTS =================================
 module.exports = {
     insertUsuario,
     updateUsuario,
     deleteUsuario,
     selectAllUsuario,
-    selectByIdUsuario
-}
+    selectByIdUsuario,
+    selectByEmailUsuario
+};
