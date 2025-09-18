@@ -9,8 +9,12 @@ CREATE TABLE tbl_usuario (
     email VARCHAR(100) NOT NULL UNIQUE,
     senha_hash VARCHAR(255) NOT NULL,
     perfil ENUM('consumidor','admin','estabelecimento') DEFAULT 'consumidor',
+    cpf VARCHAR(14) UNIQUE, -- formato: 000.000.000-00
+    cnpj VARCHAR(18) UNIQUE, -- formato: 00.000.000/0000-00
+    data_nascimento DATE,
     data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
 
 CREATE TABLE tbl_enderecoUsuario (
     id_endereco INT AUTO_INCREMENT PRIMARY KEY,
@@ -167,5 +171,7 @@ CREATE TABLE tbl_itemLista (
     CONSTRAINT fk_item_lista FOREIGN KEY (id_lista) REFERENCES tbl_listaCompra(id_lista),
     CONSTRAINT fk_item_produto FOREIGN KEY (id_produto) REFERENCES tbl_produto(id_produto)
 );
+
+
 
 
