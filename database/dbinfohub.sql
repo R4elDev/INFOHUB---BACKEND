@@ -180,5 +180,19 @@ CREATE TABLE tbl_itemLista (
 );
 
 
+CREATE TABLE tbl_recuperacaoSenha (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    id_usuario INT NOT NULL,
+    codigo VARCHAR(6) NOT NULL,
+    expiracao TIMESTAMP NOT NULL,
+    usado BOOLEAN DEFAULT FALSE,
+    data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_usuario_recuperacao FOREIGN KEY (id_usuario) REFERENCES tbl_usuario(id_usuario)
+);
+
+
+
+
+
 
 
