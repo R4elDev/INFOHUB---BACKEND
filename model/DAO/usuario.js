@@ -14,7 +14,7 @@ const insertUsuario = async function (usuario) {
     try {
         let sql = `
             INSERT INTO tbl_usuario (
-                nome, email, senha_hash, perfil, cpf, cnpj, data_nascimento
+                nome, email, senha_hash, perfil, cpf, cnpj, data_nascimento,telefone
             ) VALUES (
                 '${usuario.nome}',
                 '${usuario.email}',
@@ -22,7 +22,8 @@ const insertUsuario = async function (usuario) {
                 '${usuario.perfil}',
                 '${usuario.cpf}',
                 '${usuario.cnpj}',
-                '${usuario.data_nascimento}'
+                '${usuario.data_nascimento}',
+                '${usuario.telefone}'
             );
         `;
 
