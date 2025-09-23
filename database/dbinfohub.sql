@@ -3,6 +3,12 @@ use db_infohub;
 
 show tables;
 
+ALTER TABLE tbl_usuario
+ADD telefone VARCHAR(20) UNIQUE;
+
+
+
+
 CREATE TABLE tbl_usuario (
     id_usuario INT AUTO_INCREMENT PRIMARY KEY,
     nome VARCHAR(100) NOT NULL,
@@ -11,6 +17,7 @@ CREATE TABLE tbl_usuario (
     perfil ENUM('consumidor','admin','estabelecimento') DEFAULT 'consumidor',
     cpf VARCHAR(14) UNIQUE, -- formato: 000.000.000-00
     cnpj VARCHAR(18) UNIQUE, -- formato: 00.000.000/0000-00
+    telefone VARCHAR(20) UNIQUE,
     data_nascimento DATE,
     data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

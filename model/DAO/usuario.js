@@ -20,8 +20,9 @@ const insertUsuario = async function (usuario) {
                 '${usuario.email}',
                 '${usuario.senha_hash}',
                 '${usuario.perfil}',
-                '${usuario.cpf}',
-                '${usuario.cnpj}',
+                 ${usuario.cpf},
+                 ${usuario.cnpj},
+                '${usuario.telefone}',
                 '${usuario.data_nascimento}',
                 '${usuario.telefone}'
             );
@@ -59,8 +60,9 @@ const updateUsuario = async function (usuario) {
                 email = '${usuario.email}',
                 senha_hash = '${usuario.senha_hash}',
                 perfil = '${usuario.perfil}',
-                cpf = '${usuario.cpf}',
-                cnpj = '${usuario.cnpj}',
+                cpf = ${usuario.cpf},
+                cnpj = ${usuario.cnpj},
+                telefone = '${usuario.telefone}',
                 data_nascimento = '${usuario.data_nascimento}'
             WHERE id_usuario = ${usuario.id_usuario};
         `;

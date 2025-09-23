@@ -72,7 +72,8 @@ const loginUsuario = async function (usuario, contentType) {
 const inserirUsuario = async function (usuario, contentType) {
     try {
         if (contentType === 'application/json') {
-            // Normaliza undefined -> null apenas para cpf e cnpj
+
+            
             if (usuario.cpf === undefined) usuario.cpf = null
             if (usuario.cnpj === undefined) usuario.cnpj = null
 
@@ -81,8 +82,9 @@ const inserirUsuario = async function (usuario, contentType) {
                 usuario.email       == undefined || usuario.email       == '' || usuario.email       == null || usuario.email.length       > 150 ||
                 usuario.senha_hash  == undefined || usuario.senha_hash  == '' || usuario.senha_hash  == null || usuario.senha_hash.length  > 100 ||
                 (usuario.perfil && !['consumidor', 'admin', 'estabelecimento'].includes(usuario.perfil)) ||
-                (usuario.cpf  != null  && usuario.cpf.length  > 100) ||
-                (usuario.cnpj != null  && usuario.cnpj.length > 100) ||
+                (usuario.cpf     != null              && usuario.cpf.length  > 100) ||
+                (usuario.cnpj    != null              && usuario.cnpj.length > 100) ||
+                usuario.telefone == undefined              && usuario.telefone.length > 20 ||
                 usuario.data_nascimento  == undefined || usuario.data_nascimento.length > 100
             ) {
                 return MESSAGE.ERROR_REQUIRED_FIELDS
@@ -121,6 +123,7 @@ const atualizarUsuario = async function (usuario, id, contentType) {
                 usuario.perfil && !['consumidor', 'admin', 'estabelecimento'].includes(usuario.perfil) ||
                 usuario.cpf              == undefined ||  usuario.cpf.length             > 100  ||
                 usuario.cnpj             == undefined ||  usuario.cnpj.length            > 100 ||
+                usuario.telefone         == undefined       && usuario.telefone.length > 20 ||
                 usuario.data_nascimento  == undefined ||  usuario.data_nascimento.length > 100
             ) {
                 return MESSAGE.ERROR_REQUIRED_FIELDS
