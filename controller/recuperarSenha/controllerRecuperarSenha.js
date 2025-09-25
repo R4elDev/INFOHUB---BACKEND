@@ -31,9 +31,8 @@ const solicitarRecuperacao = async function (usuario,contentType){
             return MESSAGE.ERROR_NOT_FOUND
         }
 
-        // Parte responsavel por criar o codigo de 4 digitos
-         let codigo = Math.floor(1000 + Math.random() * 9000).toString();
 
+        let codigo = Math.floor(1000 + Math.random() * 9000).toString();
         let expiracao = new Date(Date.now() + 15 * 60 * 1000) // Vai expirar em 15 minutos
 
         let resultRecuperacao = await recuperacaoDAO.insertRecuperacao(resultUsuario.id_usuario,codigo,expiracao)
