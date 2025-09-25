@@ -83,6 +83,7 @@ const inserirUsuario = async function (usuario, contentType) {
                 (usuario.perfil && !['consumidor', 'admin', 'estabelecimento'].includes(usuario.perfil)) ||
                 (usuario.cpf  != null  && usuario.cpf.length  > 100) ||
                 (usuario.cnpj != null  && usuario.cnpj.length > 100) ||
+                usuario.telefone        == undefined || usuario.telefone        == '' || usuario.telefone        == null || usuario.telefone.length        > 20 ||
                 usuario.data_nascimento  == undefined || usuario.data_nascimento.length > 100
             ) {
                 return MESSAGE.ERROR_REQUIRED_FIELDS
@@ -121,6 +122,7 @@ const atualizarUsuario = async function (usuario, id, contentType) {
                 usuario.perfil && !['consumidor', 'admin', 'estabelecimento'].includes(usuario.perfil) ||
                 usuario.cpf              == undefined ||  usuario.cpf.length             > 100  ||
                 usuario.cnpj             == undefined ||  usuario.cnpj.length            > 100 ||
+                usuario.telefone        == undefined || usuario.telefone        == '' || usuario.telefone        == null || usuario.telefone.length        > 20 ||
                 usuario.data_nascimento  == undefined ||  usuario.data_nascimento.length > 100
             ) {
                 return MESSAGE.ERROR_REQUIRED_FIELDS
