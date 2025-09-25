@@ -11,7 +11,7 @@ const MESSAGE = require('../../modulo/config.js')
 const recuperacaoDAO = require('../../model/DAO/recuperacaoSenha.js')
 const usuarioDAO = require('../../model/DAO/usuario.js')
 const bcrypt = require('bcryptjs')
-const { sendRecoveryEmail } = require('../../services/emailService.js')
+const {enviarEmailDeRecuperacao}  = require('../../services/emailService.js')
 
 // SOLICITAR RECUPERAÇAO
 
@@ -31,14 +31,14 @@ const solicitarRecuperacao = async function (usuario,contentType){
             return MESSAGE.ERROR_NOT_FOUND
         }
 
-        // Parte responsavel por criar o codigo de 4 digitos
-        let codigo = Math.floor(1000 + Math.random() * 90000).toString()
+
+        let codigo = Math.floor(1000 + Math.random() * 9000).toString();
         let expiracao = new Date(Date.now() + 15 * 60 * 1000) // Vai expirar em 15 minutos
 
         let resultRecuperacao = await recuperacaoDAO.insertRecuperacao(resultUsuario.id_usuario,codigo,expiracao)
 
         if(resultRecuperacao){
-            await sendRecoveryEmail(resultUsuario.email, codigo)
+            await enviarEmailDeRecuperacao(resultUsuario.email, codigo)
             return MESSAGE.SUCCESS_RECOVERT_EMAIL_SENT
         }else {
             return MESSAGE.ERROR_INTERNAL_SERVER_MODEL
