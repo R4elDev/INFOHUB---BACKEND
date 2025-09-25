@@ -114,4 +114,68 @@ router.post('/redefinir-senha', bodyParserJson, async (request,response) => {
 
 })
 
+// ==============================
+// Rotas de Endereço de Usuário
+// ==============================
+const controllerEnderecoUsuario = require('../controller/usuario/controllerEnderecoUsuario.js');
+
+// Cadastro de endereço de usuário (público)
+router.post('/endereco-usuario/cadastro', bodyParserJson, async (request, response) => {
+  let contentType = request.headers['content-type'];
+  let dadosBody = request.body;
+
+  let resultEndereco = await controllerEnderecoUsuario.inserirEnderecoUsuario(dadosBody, contentType);
+
+  response.status(resultEndereco.status_code || 200);
+  response.json(resultEndereco);
+});
+
+// Listar todos os endereços de usuários (protegido)
+router.get('/endereco-usuario', verificarToken, async (request, response) => {
+  const result = await controllerEnderecoUsuario.listarEnderecosUsuario();
+  response.status(result.status_code || 200).json(result);
+});
+
+// Listar apenas um endereço por id (protegido)
+router.get('/endereco-usuario/:id', verificarToken, async (request, response) => {
+  let id = request.params.id;
+
+  let resultEndereco = await controllerEnderecoUsuario.buscarEnderecoUsuario(id);
+
+  response.status(resultEndereco.status_code || 200);
+  response.json(resultEndereco);
+});
+
+// Listar todos os endereços de um usuário específico (protegido)
+router.get('/endereco-usuario/usuario/:id_usuario', verificarToken, async (request, response) => {
+  let id_usuario = request.params.id_usuario;
+
+  let resultEndereco = await controllerEnderecoUsuario.buscarEnderecosPorUsuario(id_usuario);
+
+  response.status(resultEndereco.status_code || 200);
+  response.json(resultEndereco);
+});
+
+// Deletar um endereço por id (protegido)
+router.delete('/endereco-usuario/:id', verificarToken, async (request, response) => {
+  let id = request.params.id;
+
+  let resultEndereco = await controllerEnderecoUsuario.excluirEnderecoUsuario(id);
+
+  response.status(resultEndereco.status_code || 200);
+  response.json(resultEndereco);
+});
+
+// Atualizar um endereço por id (protegido)
+router.put('/endereco-usuario/:id', verificarToken, bodyParserJson, async (request, response) => {
+  let contentType = request.headers['content-type'];
+  let id = request.params.id;
+  let dadosBody = request.body;
+
+  let resultEndereco = await controllerEnderecoUsuario.atualizarEnderecoUsuario(dadosBody, id, contentType);
+
+  response.status(resultEndereco.status_code || 200);
+  response.json(resultEndereco);
+});
+
 module.exports = router;
