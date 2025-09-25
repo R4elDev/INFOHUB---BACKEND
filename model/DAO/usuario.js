@@ -49,16 +49,21 @@ const insertUsuario = async function (usuario) {
 // ================================ UPDATE =================================
 const updateUsuario = async function (usuario) {
     try {
+        // Define perfil válido ou padrão
+        const perfilValido = ['consumidor', 'admin', 'estabelecimento'];
+        const perfil = perfilValido.includes(usuario.perfil) ? usuario.perfil : 'consumidor';
+
+        // Monta a query de forma segura, considerando campos opcionais
         let sql = `
             UPDATE tbl_usuario SET
-                nome = '${usuario.nome}',
-                email = '${usuario.email}',
-                senha_hash = '${usuario.senha_hash}',
-                perfil = '${usuario.perfil}',
+                ${usuario.nome ? `nome = '${usuario.nome}',` : ''}
+                ${usuario.email ? `email = '${usuario.email}',` : ''}
+                ${usuario.senha_hash ? `senha_hash = '${usuario.senha_hash}',` : ''}
+                perfil = '${perfil}',
                 cpf = ${usuario.cpf ? `'${usuario.cpf}'` : 'NULL'},
                 cnpj = ${usuario.cnpj ? `'${usuario.cnpj}'` : 'NULL'},
                 telefone = ${usuario.telefone ? `'${usuario.telefone}'` : 'NULL'},
-                data_nascimento = '${usuario.data_nascimento}'
+                data_nascimento = ${usuario.data_nascimento ? `'${usuario.data_nascimento}'` : 'NULL'}
             WHERE id_usuario = ${usuario.id_usuario};
         `;
 
@@ -69,6 +74,7 @@ const updateUsuario = async function (usuario) {
         return false;
     }
 };
+
 
 // ================================ DELETE =================================
 const deleteUsuario = async function (id) {
