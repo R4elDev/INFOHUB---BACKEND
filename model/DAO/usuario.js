@@ -4,26 +4,24 @@
  * Autor --> Israel
  ****************************************************************************************/
 
-// Import da biblioteca do PRISMA/CLIENT para executar scripts no Banco de Dados
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
-
 
 // ================================ INSERT =================================
 const insertUsuario = async function (usuario) {
     try {
         let sql = `
             INSERT INTO tbl_usuario (
-                nome, email, senha_hash, perfil, cpf, cnpj, data_nascimento,telefone
+                nome, email, senha_hash, perfil, cpf, cnpj, data_nascimento, telefone
             ) VALUES (
                 '${usuario.nome}',
                 '${usuario.email}',
                 '${usuario.senha_hash}',
                 '${usuario.perfil}',
-                '${usuario.cpf}',
-                '${usuario.cnpj}',
+                ${usuario.cpf ? `'${usuario.cpf}'` : 'NULL'},
+                ${usuario.cnpj ? `'${usuario.cnpj}'` : 'NULL'},
                 '${usuario.data_nascimento}',
-                '${usuario.telefone}'
+                ${usuario.telefone ? `'${usuario.telefone}'` : 'NULL'}
             );
         `;
 
@@ -37,7 +35,6 @@ const insertUsuario = async function (usuario) {
                 ORDER BY id_usuario DESC 
                 LIMIT 1;
             `;
-
             let usuarioCriado = await prisma.$queryRawUnsafe(sqlSelect);
             return usuarioCriado[0];
         } else {
@@ -49,7 +46,6 @@ const insertUsuario = async function (usuario) {
     }
 };
 
-
 // ================================ UPDATE =================================
 const updateUsuario = async function (usuario) {
     try {
@@ -59,9 +55,9 @@ const updateUsuario = async function (usuario) {
                 email = '${usuario.email}',
                 senha_hash = '${usuario.senha_hash}',
                 perfil = '${usuario.perfil}',
-                cpf = '${usuario.cpf}',
-                cnpj = '${usuario.cnpj}',
-                telefone = '${usuario.telefone}'
+                cpf = ${usuario.cpf ? `'${usuario.cpf}'` : 'NULL'},
+                cnpj = ${usuario.cnpj ? `'${usuario.cnpj}'` : 'NULL'},
+                telefone = ${usuario.telefone ? `'${usuario.telefone}'` : 'NULL'},
                 data_nascimento = '${usuario.data_nascimento}'
             WHERE id_usuario = ${usuario.id_usuario};
         `;
@@ -73,7 +69,6 @@ const updateUsuario = async function (usuario) {
         return false;
     }
 };
-
 
 // ================================ DELETE =================================
 const deleteUsuario = async function (id) {
@@ -87,7 +82,6 @@ const deleteUsuario = async function (id) {
     }
 };
 
-
 // ================================ SELECT ALL =================================
 const selectAllUsuario = async function () {
     try {
@@ -99,7 +93,6 @@ const selectAllUsuario = async function () {
         return false;
     }
 };
-
 
 // ================================ SELECT BY ID =================================
 const selectByIdUsuario = async function (id) {
@@ -120,11 +113,10 @@ const selectByEmailUsuario = async function (email) {
         let result = await prisma.$queryRawUnsafe(sql);
         return result && result.length > 0 ? result[0] : false;
     } catch (error) {
-        console.log("ERRO AO BUSCAR USUARIO POR ID:", error);
+        console.log("ERRO AO BUSCAR USUARIO POR EMAIL:", error);
         return false;
     }
 };
-
 
 // ================================ EXPORTS =================================
 module.exports = {
