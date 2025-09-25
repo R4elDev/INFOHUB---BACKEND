@@ -1,6 +1,6 @@
-import nodemailer from "nodemailer"
+const nodemailer = require("nodemailer");
 
-export const enviarEmailDeRecuperacao = async (to, codigo) => {
+const enviarEmailDeRecuperacao = async (to, codigo) => {
     const transporter = nodemailer.createTransport({
         service: "gmail",
         auth: {
@@ -15,4 +15,8 @@ export const enviarEmailDeRecuperacao = async (to, codigo) => {
         subject: "Recuperação de Senha",
         text: `Seu código de recuperação é: ${codigo} (válido por 15 minutos).`
     })
+}
+
+module.exports = {
+    enviarEmailDeRecuperacao
 }
