@@ -41,6 +41,18 @@ const ERROR_UNAUTHORIZED = {
     message: "Os campos iseridos não correspondem! Faça login para continuar!"
 }
 
+const ERROR_INVALID_CODE = {
+    status: false,
+    status_code: 400,
+    message: "Não possível prosseguir pois o código está inválido"
+}
+
+const ERROR_CODE_EXPIRED = {
+    status: false,
+    status_code: 400,
+    message: "Não foi possível prosseguir pois o código está expirado"
+}
+
 
 
 
@@ -71,6 +83,20 @@ const SUCCESS_LOGIN = {
     message: 'Login realizado com sucesso!'
 }
 
+const SUCCESS_RECOVERT_EMAIL_SENT = {
+    status: true,
+    status_code: 200,
+    message: 'Email de recuperação enviado com sucesso!'
+}
+
+const SUCCESS_PASSWORD_RESET = {
+    status: true,
+    status_code: 200,
+    message: 'Senha resetada com sucesso!'
+}
+
+
+
 
 
 
@@ -92,5 +118,9 @@ module.exports = {
     SUCCESS_DELETED_ITEM,
     SUCCESS_UPDATED_ITEM,
     ERROR_UNAUTHORIZED,
-    SUCCESS_LOGIN
+    SUCCESS_LOGIN,
+    SUCCESS_RECOVERT_EMAIL_SENT,
+    ERROR_INVALID_CODE,
+    ERROR_CODE_EXPIRED,
+    SUCCESS_PASSWORD_RESET
 }
