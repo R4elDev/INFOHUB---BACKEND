@@ -61,6 +61,7 @@ const updateUsuario = async function (usuario) {
                 perfil = '${usuario.perfil}',
                 cpf = '${usuario.cpf}',
                 cnpj = '${usuario.cnpj}',
+                telefone = '${usuario.telefone}'
                 data_nascimento = '${usuario.data_nascimento}'
             WHERE id_usuario = ${usuario.id_usuario};
         `;
