@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const bodyParser = require('body-parser');
-const controllerUsuario = require('../controller/usuario/controllerUsuario.js');
 const verificarToken = require('../middleware/verificarToken.js');
 
 const bodyParserJson = bodyParser.json();
@@ -9,6 +8,8 @@ const bodyParserJson = bodyParser.json();
 // ==============================
 // Rotas de Usuário
 // ==============================
+const controllerUsuario = require('../controller/usuario/controllerUsuario.js');
+
 
 // Cadastro de usuário (público)
 router.post('/usuarios/cadastro', bodyParserJson, async (request, response) => {
@@ -72,5 +73,45 @@ router.put('/usuario/:id',verificarToken,bodyParserJson,async (request, response
     response.json(resultUsuario)
 });
 
+
+// ==============================
+// Rotas de Recuperaçao de senha
+// ==============================
+const controllerRecuperacaoSenha = require('../controller/recuperarSenha/controllerRecuperarSenha.js');
+
+// Solicitar recuperaçao de senha ( pública )
+router.post('/recuperar-senha', bodyParserJson, async (request, response) => {
+  let contentType = request.headers['content-type']
+  let dadosBody = request.body
+
+  let resultRecuperacao = await controllerRecuperacaoSenha.solicitarRecuperacao(dadosBody,contentType)
+
+  response.status(resultRecuperacao.status_code || 200)
+  response.json(resultRecuperacao)
+})
+
+
+// Valida código de recuperação (público)
+router.post('/validar-codigo', bodyParserJson, async(request,response) => {
+  let contentType = request.headers['content-type']
+  let dadosBody = request.body
+
+  let resultValidacao = await controllerRecuperacaoSenha.validarCodigo(dadosBody,contentType)
+
+  response.status(resultValidacao.status_code || 200);
+  response.json(resultValidacao);
+})
+
+
+router.post('/redefinir-senha', bodyParserJson, async (request,response) => {
+  let contentType = request.headers['content-type']
+  let dadosBody = request.body
+
+  let resultRedefinir = await controllerRecuperacaoSenha.redefinirSenha(dadosBody,contentType)
+
+  response.status(resultRedefinir.status_code || 200);
+  response.json(resultRedefinir);
+
+})
 
 module.exports = router;
