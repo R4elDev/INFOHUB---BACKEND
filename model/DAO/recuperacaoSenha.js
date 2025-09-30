@@ -85,9 +85,31 @@ const marcarComoUsado = async function(id){
     }
 }
 
+// =============================== UPDATE DE NOVA SENHA =================================
+const atualizandoSenha = async function(id_usuario,novaSenha){
+    try{
+        let sql = `
+            UPDATE tbl_usuario
+            SET senha_hash = '${novaSenha}'
+            WHERE id = ${id_usuario}
+        `
+
+        let result = await prisma.$executeRawUnsafe(sql)
+
+        if(result){
+            return true
+        }else{
+            return false
+        }
+    }catch(error){
+        console.log("Erro ao atualizar senha")
+    }
+}
+
 
 module.exports = {
     insertRecuperacao,
     selectByCodigo,
-    marcarComoUsado
+    marcarComoUsado,
+    atualizandoSenha
 }

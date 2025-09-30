@@ -18,6 +18,8 @@ router.post('/usuarios/cadastro', bodyParserJson, async (request, response) => {
 
   let resultUsuario = await controllerUsuario.inserirUsuario(dadosBody, contentType)
 
+
+  console.log(resultUsuario)
   response.status(resultUsuario.status_code)
   response.json(resultUsuario)
 });
@@ -28,6 +30,8 @@ router.post('/login', bodyParserJson, async (request, response) => {
   let { email, senha } = request.body;
 
   const result = await controllerUsuario.loginUsuario({ email, senha }, contentType);
+
+  console.log('Resultado loginUsuario:', result)
 
   response.status(result.status_code || 200).json(result);
 });

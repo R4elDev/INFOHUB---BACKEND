@@ -100,11 +100,10 @@ const redefinirSenha = async function( dados, contentType){
         }
 
         // CripTografando a nova senha
+
+        console.log(registro)
         let senhaHash = await bcrypt.hash(dados.novaSenha,10)
-        let resulUpdate = await usuarioDAO.updateUsuario({
-            id_usuario: registro.id_usuario,
-            senhaHash: senhaHash
-        })
+        let resulUpdate = await usuarioDAO.updateSenha(registro.id_usuario,senhaHash)
 
         if(resulUpdate){
             await recuperacaoDAO.marcarComoUsado(registro.id)

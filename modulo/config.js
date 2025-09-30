@@ -53,6 +53,12 @@ const ERROR_CODE_EXPIRED = {
     message: "Não foi possível prosseguir pois o código está expirado"
 }
 
+const ERROR_INVALID_CREDENTIALS = {
+    status: false,
+    status_code: 400,
+    message:"Senha ou email inválidos"
+}
+
 
 
 
@@ -122,5 +128,6 @@ module.exports = {
     SUCCESS_RECOVERT_EMAIL_SENT,
     ERROR_INVALID_CODE,
     ERROR_CODE_EXPIRED,
-    SUCCESS_PASSWORD_RESET
+    SUCCESS_PASSWORD_RESET,
+    ERROR_INVALID_CREDENTIALS
 }

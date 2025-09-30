@@ -6,8 +6,9 @@
 
 const MESSAGE = require('../../modulo/config.js');
 const usuarioDAO = require('../../model/DAO/usuario.js');
-const bcrypt = require('bcryptjs');
-const jwt = require("jsonwebtoken");
+const jwt = require('jsonwebtoken')
+const bcrypt = require('bcryptjs')
+
 
 /**
  * LOGIN
