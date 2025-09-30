@@ -10,6 +10,7 @@ const prisma = new PrismaClient();
 // ================================ INSERT =================================
 const insertUsuario = async function (usuario) {
     try {
+        console.log(usuario)
         let sql = `
             INSERT INTO tbl_usuario (
                 nome, email, senha_hash, perfil, cpf, cnpj, data_nascimento, telefone
@@ -124,6 +125,26 @@ const selectByEmailUsuario = async function (email) {
     }
 };
 
+
+// usuarioDAO.js
+const updateSenha = async (idUsuario, senha_hash) => {
+  try {
+    const sql = `
+      UPDATE tbl_usuario
+      SET senha_hash = '${senha_hash}'
+      WHERE id_usuario = ${idUsuario}
+    ;`
+
+    const result = await prisma.$executeRawUnsafe(sql)
+
+    return result ? true : false;
+  } catch (error) {
+    console.log('ERRO UPDATE SENHA ->', error);
+    return false;
+  }
+};
+
+
 // ================================ EXPORTS =================================
 module.exports = {
     insertUsuario,
@@ -131,5 +152,6 @@ module.exports = {
     deleteUsuario,
     selectAllUsuario,
     selectByIdUsuario,
-    selectByEmailUsuario
+    selectByEmailUsuario,
+    updateSenha
 };

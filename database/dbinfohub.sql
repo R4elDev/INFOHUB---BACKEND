@@ -16,6 +16,8 @@ CREATE TABLE tbl_usuario (
     data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+select * from tbl_usuario
+
 
 CREATE TABLE tbl_enderecoUsuario (
     id_endereco INT AUTO_INCREMENT PRIMARY KEY,
