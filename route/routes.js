@@ -118,4 +118,24 @@ router.post('/redefinir-senha', bodyParserJson, async (request,response) => {
 
 })
 
+// ==============================
+// Rotas de Chat / Promoções
+// ==============================
+const controllerChat = require('../controller/chatIA/controllerChatIa.js');
+
+// Busca promoções (público ou autenticado conforme necessidade)
+router.post('/chat/promocoes', bodyParserJson, verificarToken, async (request, response) => {
+    let contentType = request.headers['content-type'];
+    let dadosBody = request.body;
+
+    let termoBusca = dadosBody.termoBusca;
+    let idUsuario = dadosBody.idUsuario;
+
+    let resultado = await controllerChat.buscarPromocoes(termoBusca, idUsuario, contentType);
+
+    console.log(resultado);
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
 module.exports = router;
