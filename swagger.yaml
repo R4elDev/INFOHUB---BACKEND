@@ -1,0 +1,935 @@
+openapi: 3.0.3
+info:
+  title: InfoHub API - Sistema Completo
+  description: |
+    API completa do InfoHub para gerenciamento de usuários, recuperação de senhas e chat com IA para busca de promoções.
+    
+    ## Arquitetura
+    - **API Principal**: Node.js/Express (porta 8080)
+    - **IA Service**: Python/FastAPI (porta 5001)
+    - **Banco**: MySQL com Prisma ORM
+    
+    ## Autenticação
+    Rotas protegidas requerem JWT token no header:
+    ```
+    Authorization: Bearer <token>
+    ```
+    
+    ## Serviços
+    1. **Usuários**: Cadastro, login, CRUD
+    2. **Recuperação de Senha**: Solicitação, validação, redefinição
+    3. **Chat IA**: Busca inteligente de promoções
+    
+  version: 1.0.0
+  contact:
+    name: InfoHub Team
+    email: support@infohub.com
+  license:
+    name: ISC
+    
+servers:
+  - url: http://localhost:8080/v1/infohub
+    description: API Principal (Node.js)
+  - url: http://localhost:5001
+    description: Serviço de IA (Python)
+
+tags:
+  - name: Usuários
+    description: Gerenciamento de usuários
+  - name: Autenticação
+    description: Login e autenticação
+  - name: Recuperação de Senha
+    description: Sistema de recuperação de senha por email
+  - name: Chat IA
+    description: Interação com IA para busca de promoções
+  - name: IA Service
+    description: Endpoints diretos do serviço Python
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      
+  schemas:
+    Usuario:
+      type: object
+      required:
+        - nome
+        - email
+        - senha
+      properties:
+        id:
+          type: integer
+          description: ID único do usuário
+          example: 1
+        nome:
+          type: string
+          description: Nome completo do usuário
+          example: "João Silva"
+        email:
+          type: string
+          format: email
+          description: Email único do usuário
+          example: "joao@email.com"
+        senha:
+          type: string
+          format: password
+          description: Senha do usuário (hash)
+          example: "123456"
+        data_nascimento:
+          type: string
+          format: date
+          description: Data de nascimento
+          example: "1990-05-15"
+        telefone:
+          type: string
+          description: Telefone do usuário
+          example: "(11) 99999-9999"
+        
+    UsuarioResponse:
+      type: object
+      properties:
+        status:
+          type: boolean
+          example: true
+        status_code:
+          type: integer
+          example: 200
+        message:
+          type: string
+          example: "Usuário criado com sucesso"
+        data:
+          $ref: '#/components/schemas/Usuario'
+          
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - senha
+      properties:
+        email:
+          type: string
+          format: email
+          example: "joao@email.com"
+        senha:
+          type: string
+          format: password
+          example: "123456"
+          
+    LoginResponse:
+      type: object
+      properties:
+        status:
+          type: boolean
+          example: true
+        status_code:
+          type: integer
+          example: 200
+        message:
+          type: string
+          example: "Login realizado com sucesso"
+        token:
+          type: string
+          description: JWT token para autenticação
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        user:
+          $ref: '#/components/schemas/Usuario'
+          
+    RecuperacaoSenhaRequest:
+      type: object
+      required:
+        - email
+      properties:
+        email:
+          type: string
+          format: email
+          description: Email para recuperação
+          example: "joao@email.com"
+          
+    ValidarCodigoRequest:
+      type: object
+      required:
+        - email
+        - codigo
+      properties:
+        email:
+          type: string
+          format: email
+          example: "joao@email.com"
+        codigo:
+          type: string
+          description: Código de 6 dígitos enviado por email
+          example: "123456"
+          
+    RedefinirSenhaRequest:
+      type: object
+      required:
+        - email
+        - codigo
+        - nova_senha
+      properties:
+        email:
+          type: string
+          format: email
+          example: "joao@email.com"
+        codigo:
+          type: string
+          description: Código validado
+          example: "123456"
+        nova_senha:
+          type: string
+          format: password
+          description: Nova senha do usuário
+          example: "novaSenha123"
+          
+    ChatRequest:
+      type: object
+      required:
+        - mensagem
+        - idUsuario
+      properties:
+        mensagem:
+          type: string
+          description: Mensagem do usuário para a IA
+          example: "quais as promoções de leite?"
+        idUsuario:
+          type: integer
+          description: ID do usuário logado
+          example: 1
+          
+    ChatResponse:
+      type: object
+      properties:
+        status:
+          type: boolean
+          example: true
+        status_code:
+          type: integer
+          example: 200
+        message:
+          type: string
+          example: "Resposta gerada com sucesso"
+        data:
+          type: object
+          properties:
+            reply:
+              type: string
+              description: Resposta da IA
+              example: "🛒 Encontrei 3 promoções de leite perto de você!"
+            confidence:
+              type: number
+              format: float
+              description: Confiança da resposta (0-1)
+              example: 0.95
+            response_time_ms:
+              type: integer
+              description: Tempo de resposta em milissegundos
+              example: 150
+            toolsUsed:
+              type: array
+              items:
+                type: string
+              example: ["classifier", "find_promotions"]
+              
+    FastChatRequest:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+          description: Mensagem para a IA
+          example: "quais as promoções?"
+        user_id:
+          type: integer
+          description: ID do usuário
+          example: 1
+        session_id:
+          type: string
+          description: ID da sessão
+          example: "session_123"
+          
+    FastChatResponse:
+      type: object
+      properties:
+        reply:
+          type: string
+          description: Resposta da IA
+          example: "🛒 Encontrei 3 promoções perto de você!"
+        confidence:
+          type: number
+          format: float
+          description: Confiança da resposta
+          example: 0.95
+        response_time_ms:
+          type: integer
+          description: Tempo de resposta
+          example: 50
+        method:
+          type: string
+          description: Método usado pela IA
+          example: "promotion_search"
+        toolsUsed:
+          type: array
+          items:
+            type: string
+          example: ["classifier", "find_promotions"]
+          
+    ErrorResponse:
+      type: object
+      properties:
+        status:
+          type: boolean
+          example: false
+        status_code:
+          type: integer
+          example: 400
+        message:
+          type: string
+          example: "Erro na requisição"
+        error:
+          type: string
+          description: Detalhes do erro
+          example: "Campo obrigatório não informado"
+
+paths:
+  # ==============================
+  # API PRINCIPAL (Node.js - Porta 8080)
+  # ==============================
+  
+  # USUÁRIOS
+  /usuarios/cadastro:
+    post:
+      tags:
+        - Usuários
+      summary: Cadastrar novo usuário
+      description: Cria um novo usuário no sistema
+      servers:
+        - url: http://localhost:8080/v1/infohub
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Usuario'
+            example:
+              nome: "João Silva"
+              email: "joao@email.com"
+              senha: "123456"
+              data_nascimento: "1990-05-15"
+              telefone: "(11) 99999-9999"
+      responses:
+        '201':
+          description: Usuário criado com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsuarioResponse'
+        '400':
+          description: Dados inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Email já existe
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+                
+  /usuarios:
+    get:
+      tags:
+        - Usuários
+      summary: Listar todos os usuários
+      description: Retorna lista de todos os usuários cadastrados
+      servers:
+        - url: http://localhost:8080/v1/infohub
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Lista de usuários
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: true
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Usuario'
+        '401':
+          description: Token inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+                
+  /usuario/{id}:
+    get:
+      tags:
+        - Usuários
+      summary: Buscar usuário por ID
+      description: Retorna dados de um usuário específico
+      servers:
+        - url: http://localhost:8080/v1/infohub
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      responses:
+        '200':
+          description: Dados do usuário
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsuarioResponse'
+        '404':
+          description: Usuário não encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+                
+    put:
+      tags:
+        - Usuários
+      summary: Atualizar usuário
+      description: Atualiza dados de um usuário existente
+      servers:
+        - url: http://localhost:8080/v1/infohub
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Usuario'
+      responses:
+        '200':
+          description: Usuário atualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsuarioResponse'
+        '404':
+          description: Usuário não encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+                
+    delete:
+      tags:
+        - Usuários
+      summary: Deletar usuário
+      description: Remove um usuário do sistema
+      servers:
+        - url: http://localhost:8080/v1/infohub
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      responses:
+        '200':
+          description: Usuário deletado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Usuário deletado com sucesso"
+        '404':
+          description: Usuário não encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # AUTENTICAÇÃO
+  /login:
+    post:
+      tags:
+        - Autenticação
+      summary: Fazer login
+      description: Autentica usuário e retorna JWT token
+      servers:
+        - url: http://localhost:8080/v1/infohub
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login realizado com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          description: Credenciais inválidas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # RECUPERAÇÃO DE SENHA
+  /recuperar-senha:
+    post:
+      tags:
+        - Recuperação de Senha
+      summary: Solicitar recuperação de senha
+      description: Envia código de recuperação por email
+      servers:
+        - url: http://localhost:8080/v1/infohub
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecuperacaoSenhaRequest'
+      responses:
+        '200':
+          description: Código enviado por email
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Código de recuperação enviado para o email"
+        '404':
+          description: Email não encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+                
+  /validar-codigo:
+    post:
+      tags:
+        - Recuperação de Senha
+      summary: Validar código de recuperação
+      description: Valida o código enviado por email
+      servers:
+        - url: http://localhost:8080/v1/infohub
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ValidarCodigoRequest'
+      responses:
+        '200':
+          description: Código válido
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Código válido"
+        '400':
+          description: Código inválido ou expirado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+                
+  /redefinir-senha:
+    post:
+      tags:
+        - Recuperação de Senha
+      summary: Redefinir senha
+      description: Define nova senha após validação do código
+      servers:
+        - url: http://localhost:8080/v1/infohub
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RedefinirSenhaRequest'
+      responses:
+        '200':
+          description: Senha redefinida com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Senha redefinida com sucesso"
+        '400':
+          description: Código inválido ou dados incorretos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # CHAT IA (API Principal)
+  /interagir:
+    post:
+      tags:
+        - Chat IA
+      summary: Interagir com IA
+      description: |
+        Endpoint principal para chat com IA. A IA pode responder sobre:
+        - Busca de promoções específicas: "leite barato"
+        - Lista geral de promoções: "quais as promoções?"
+        - Melhores preços por região: "melhor preço de arroz perto"
+        - Informações sobre produtos: "que produtos têm?"
+        - Como funciona: "como usar o sistema?"
+      servers:
+        - url: http://localhost:8080/v1/infohub
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatRequest'
+            examples:
+              busca_especifica:
+                summary: Busca produto específico
+                value:
+                  mensagem: "leite barato"
+                  idUsuario: 1
+              lista_geral:
+                summary: Lista todas as promoções
+                value:
+                  mensagem: "quais as promoções?"
+                  idUsuario: 1
+              melhor_preco:
+                summary: Melhores preços por região
+                value:
+                  mensagem: "melhor preço de arroz perto de mim"
+                  idUsuario: 1
+              ajuda:
+                summary: Como funciona
+                value:
+                  mensagem: "como funciona o sistema?"
+                  idUsuario: 1
+      responses:
+        '200':
+          description: Resposta da IA
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatResponse'
+              examples:
+                promocoes_encontradas:
+                  summary: Promoções encontradas
+                  value:
+                    status: true
+                    status_code: 200
+                    message: "Resposta gerada com sucesso"
+                    data:
+                      reply: "🛒 **Encontrei leite!**\n\n• **Leite Integral 1L** no **Supermercado Central**\n💰 **R$ 4,99** • 📍 **2.6 km** • 📅 até **2025-10-31**"
+                      confidence: 0.95
+                      response_time_ms: 150
+                      toolsUsed: ["classifier", "find_promotions"]
+                lista_promocoes:
+                  summary: Lista de promoções
+                  value:
+                    status: true
+                    status_code: 200
+                    data:
+                      reply: "🛍️ **3 promoções ativas perto de você:**\n\n**1.** Detergente - Supermercado Central\n💰 R$ 2,99 • 📍 2.6 km"
+                      confidence: 0.90
+                      response_time_ms: 200
+        '400':
+          description: Dados inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Token inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+                
+  /respostaOllama:
+    post:
+      tags:
+        - Chat IA
+      summary: Resposta Ollama (Legacy)
+      description: Endpoint legacy para compatibilidade. Use /interagir para novas implementações.
+      servers:
+        - url: http://localhost:8080/v1/infohub
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatRequest'
+      responses:
+        '200':
+          description: Resposta processada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatResponse'
+
+  # ==============================
+  # SERVIÇO IA (Python - Porta 5001)
+  # ==============================
+  
+  /:
+    get:
+      tags:
+        - IA Service
+      summary: Status do serviço IA
+      description: Retorna informações sobre o status e modo do serviço de IA
+      servers:
+        - url: http://localhost:5001
+      responses:
+        '200':
+          description: Status do serviço
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  service:
+                    type: string
+                    example: "InfoHub AI Agent"
+                  version:
+                    type: string
+                    example: "4.0.0-LIGHTNING"
+                  mode:
+                    type: string
+                    example: "⚡ lightning"
+                  status:
+                    type: string
+                    example: "⚡ READY FOR SPEED"
+                  ai_usage:
+                    type: string
+                    example: "0%"
+                    
+  /chat:
+    post:
+      tags:
+        - IA Service
+      summary: Chat direto com IA
+      description: |
+        Endpoint direto para chat com IA (sem autenticação).
+        Otimizado para velocidade com sistema híbrido:
+        - Regras rápidas: 0-5ms (90% dos casos)
+        - LLM backup: 200-500ms (10% dos casos)
+        
+        **Tipos de resposta:**
+        - `greeting`: Saudações
+        - `general_promotions`: Lista geral de promoções
+        - `promotion_search`: Busca específica
+        - `best_nearby`: Melhores preços por região
+        - `how_it_works`: Como funciona
+        - `product_catalog`: Lista de produtos
+      servers:
+        - url: http://localhost:5001
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FastChatRequest'
+            examples:
+              saudacao:
+                summary: Saudação
+                value:
+                  message: "oi"
+                  user_id: 1
+              lista_promocoes:
+                summary: Lista de promoções
+                value:
+                  message: "quais as promoções?"
+                  user_id: 1
+              busca_produto:
+                summary: Busca produto
+                value:
+                  message: "leite barato"
+                  user_id: 1
+      responses:
+        '200':
+          description: Resposta da IA
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FastChatResponse'
+              examples:
+                resposta_rapida:
+                  summary: Resposta instantânea (regras)
+                  value:
+                    reply: "👋 Oi! Sou seu assistente de promoções do InfoHub!"
+                    confidence: 0.95
+                    response_time_ms: 2
+                    method: "greeting"
+                    toolsUsed: ["classifier"]
+                busca_promocoes:
+                  summary: Busca com banco de dados
+                  value:
+                    reply: "🛒 **Encontrei leite!**"
+                    confidence: 0.90
+                    response_time_ms: 150
+                    method: "promotion_search"
+                    toolsUsed: ["classifier", "find_promotions"]
+                    
+  /stats:
+    get:
+      tags:
+        - IA Service
+      summary: Estatísticas de performance
+      description: Retorna métricas de performance do sistema de IA
+      servers:
+        - url: http://localhost:5001
+      responses:
+        '200':
+          description: Estatísticas do sistema
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  agent:
+                    type: string
+                    example: "lightning (no AI)"
+                  total_requests:
+                    type: integer
+                    example: 1250
+                  cache_hits:
+                    type: integer
+                    example: 1000
+                  cache_hit_rate:
+                    type: string
+                    example: "80.0%"
+                  cache_size:
+                    type: integer
+                    example: 45
+                  avg_response_time_ms:
+                    type: string
+                    example: "35.2"
+                  target_time:
+                    type: string
+                    example: "< 100ms"
+                  ai_usage:
+                    type: string
+                    example: "0% (pure logic)"
+                    
+  /health:
+    get:
+      tags:
+        - IA Service
+      summary: Health check
+      description: Verifica se o serviço está funcionando
+      servers:
+        - url: http://localhost:5001
+      responses:
+        '200':
+          description: Serviço funcionando
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "✅ OK"
+                  mode:
+                    type: string
+                    example: "🚀 ultra-fast"
+                  uptime:
+                    type: string
+                    example: "running"
+                  version:
+                    type: string
+                    example: "3.0.0-TURBO"
+                    
+  /ollama:
+    post:
+      tags:
+        - IA Service
+      summary: Compatibilidade Ollama (Legacy)
+      description: Endpoint de compatibilidade com formato antigo
+      servers:
+        - url: http://localhost:5001
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                mensagem:
+                  type: string
+                  example: "quais as promoções?"
+                idUsuario:
+                  type: integer
+                  example: 1
+      responses:
+        '200':
+          description: Resposta no formato antigo
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  reply:
+                    type: string
+                  toolsUsed:
+                    type: array
+                    items:
+                      type: string
+                  status:
+                    type: string
+                    example: "success"
+                  response_time_ms:
+                    type: integer
