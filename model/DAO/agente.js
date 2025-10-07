@@ -9,11 +9,14 @@ const prisma = new PrismaClient();
 
 const buscarPromocoes = async function (termoBusca, idUsuario, radiusKm = 10, maxResults = 10) {
     try {
+        const uid = Number(idUsuario) || 0;
+        const safeTerm = String(termoBusca || '').replace(/'/g, "''");
+
         // Query para pegar coordenadas do usuário
         let usuarioCoords = await prisma.$queryRawUnsafe(`
             SELECT latitude, longitude 
             FROM tbl_enderecoUsuario 
-            WHERE id_usuario = ${idUsuario}
+            WHERE id_usuario = ${uid}
             ORDER BY id_endereco DESC
             LIMIT 1;
         `);
@@ -50,7 +53,7 @@ const buscarPromocoes = async function (termoBusca, idUsuario, radiusKm = 10, ma
             JOIN tbl_estabelecimento AS est ON est.id_estabelecimento = promo.id_estabelecimento
             JOIN tbl_enderecoEstabelecimento AS endest ON endest.id_estabelecimento = est.id_estabelecimento
             WHERE promo.data_inicio <= '${hoje}' AND promo.data_fim >= '${hoje}'
-                AND prod.nome LIKE '%${termoBusca}%'
+                AND prod.nome LIKE '%${safeTerm}%'
             HAVING distance_km <= ${radiusKm}
             ORDER BY promo.preco_promocional ASC, distance_km ASC
             LIMIT ${maxResults};
@@ -59,7 +62,6 @@ const buscarPromocoes = async function (termoBusca, idUsuario, radiusKm = 10, ma
         let promocoes = await prisma.$queryRawUnsafe(sql);
 
         return promocoes;
-
     } catch (error) {
         console.log("ERRO AO BUSCAR PROMOÇÕES:", error);
         return [];
