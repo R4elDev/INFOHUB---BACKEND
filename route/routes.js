@@ -118,24 +118,60 @@ router.post('/redefinir-senha', bodyParserJson, async (request,response) => {
 
 })
 
+
+
+
 // ==============================
-// Rotas de Chat / Promoções
+// Rotas de CHAT COM IA
 // ==============================
-const controllerChat = require('../controller/chatIA/controllerChatIa.js');
+
+// Controller responsável pela busca de promoções via IA
+const controllerChat = require('../controller/chatIA/agenteController.js');
 
 // Busca promoções (público ou autenticado conforme necessidade)
-router.post('/chat/promocoes', bodyParserJson, verificarToken, async (request, response) => {
-    let contentType = request.headers['content-type'];
-    let dadosBody = request.body;
+router.post('/interagir', bodyParserJson, verificarToken, async (request, response) => {
+    try {
+        let contentType = request.headers['content-type'];
+        let dadosBody = request.body;
 
-    let termoBusca = dadosBody.termoBusca;
-    let idUsuario = dadosBody.idUsuario;
+        let termoBusca = dadosBody.termoBusca;
+        let idUsuario = dadosBody.idUsuario;
 
-    let resultado = await controllerChat.buscarPromocoes(termoBusca, idUsuario, contentType);
+        if (!termoBusca || !idUsuario) {
+            return response.status(400).json({
+                status: false,
+                status_code: 400,
+                message: "Campos 'termoBusca' e 'idUsuario' são obrigatórios."
+            });
+        }
 
-    console.log(resultado);
-    response.status(resultado.status_code);
-    response.json(resultado);
+        let resultado = await controllerChat.buscarPromocoes(termoBusca, idUsuario, contentType);
+
+        console.log("Resultado da busca:", resultado);
+
+        return response.status(resultado.status_code).json(resultado);
+    } catch (error) {
+        console.error("Erro na rota /interagir:", error);
+        return response.status(500).json({
+            status: false,
+            status_code: 500,
+            message: "Erro interno no servidor."
+        });
+    }
+});
+
+router.post('/respostaOllama', bodyParserJson, verificarToken, async (request, response) => {
+  let contentType = request.headers['content-type'];
+  let dadosBody = request.body;
+
+  let usuarioId = dadosBody.idUsuario;
+  let mensagem = dadosBody.mensagem;
+
+  let resultado = await controllerChat.respostaOllama(mensagem, usuarioId, contentType);
+
+  console.log(resultado);
+  response.status(resultado.status_code);
+  response.json(resultado);
 });
 
 module.exports = router;
