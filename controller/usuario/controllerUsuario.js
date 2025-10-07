@@ -1,95 +1,237 @@
 /**************************************************************************
- * Objetivo ==> Controller responsável pela regra de negócio do Chat/IA
- * Data ==> 07/10/2025
+ * Objetivo ==> Controller responsável pela regra de negócio do CRUD do usuario
+ * Data ==> 18/09/2025
  * Autor ==> Israel
  ****************************************************************************/
 
 const MESSAGE = require('../../modulo/config.js');
-const chatDAO = require('../../model/DAO/chat.js');
-const fetch = require('node-fetch'); // Fetch para chamadas HTTP
+const usuarioDAO = require('../../model/DAO/usuario.js');
+const bcrypt = require('bcryptjs');
+const jwt = require("jsonwebtoken");
+
 
 /**
- * BUSCAR PROMOÇÕES
+ * LOGIN
  */
-const buscarPromocoes = async function (termoBusca, idUsuario, contentType) {
+const loginUsuario = async function (usuario, contentType) {
     try {
         if (contentType !== 'application/json') {
             return MESSAGE.ERROR_CONTENT_TYPE;
         }
 
-        if (!termoBusca || !idUsuario) {
+        const { email, senha } = usuario;
+
+        if (!email || !senha) {
             return MESSAGE.ERROR_REQUIRED_FIELDS;
         }
 
-        let dadosPromocoes = await chatDAO.buscarPromocoes(termoBusca, idUsuario);
+        let resultUsuario = await usuarioDAO.selectByEmailUsuario(email);
 
-        if (dadosPromocoes && dadosPromocoes.length > 0) {
-            return {
-                status: true,
-                status_code: 200,
-                message: 'Promoções encontradas com sucesso!',
-                quantidade: dadosPromocoes.length,
-                promocoes: dadosPromocoes
-            };
-        } else {
-            return {
-                status: false,
-                status_code: 404,
-                message: 'Nenhuma promoção encontrada para sua busca.'
-            };
+        if (!resultUsuario) {
+            return MESSAGE.ERROR_NOT_FOUND;
         }
+
+        const senhaValida = await bcrypt.compare(senha, resultUsuario.senha_hash);
+
+        if (!senhaValida) {
+            return MESSAGE.ERROR_INVALID_CREDENTIALS;
+        }
+
+        const token = jwt.sign(
+            {
+                id: resultUsuario.id_usuario,
+                email: resultUsuario.email,
+                perfil: resultUsuario.perfil
+            },
+            process.env.JWT_SECRET,
+            { expiresIn: "1h" }
+        );
+
+        return {
+            status: true,
+            status_code: 200,
+            token,
+            usuario: {
+                id: resultUsuario.id_usuario,
+                nome: resultUsuario.nome,
+                email: resultUsuario.email,
+                perfil: resultUsuario.perfil
+            }
+        };
+
     } catch (error) {
-        console.log('ERRO AO BUSCAR PROMOÇÕES:', error);
+        console.error(error);
         return MESSAGE.ERROR_INTERNAL_SERVER_CONTROLLER;
     }
 };
 
 /**
- * RESPOSTA OLLAMA
+ * INSERIR
  */
-const respostaOllama = async function (mensagem, idUsuario, contentType) {
+const inserirUsuario = async function (usuario, contentType) {
     try {
-        if (contentType !== 'application/json') {
-            return MESSAGE.ERROR_CONTENT_TYPE;
-        }
+        if (contentType !== 'application/json') return MESSAGE.ERROR_CONTENT_TYPE;
 
-        if (!mensagem || !idUsuario) {
-            return MESSAGE.ERROR_REQUIRED_FIELDS;
-        }
+        // Validação de campos obrigatórios
+        if (
+            !usuario.nome || usuario.nome.length > 100 ||
+            !usuario.email || usuario.email.length > 150 ||
+            !usuario.senha_hash || usuario.senha_hash.length > 100 ||
+            (usuario.perfil && !['consumidor', 'admin', 'estabelecimento'].includes(usuario.perfil)) ||
+            (usuario.cpf && usuario.cpf.length > 100) ||
+            (usuario.cnpj && usuario.cnpj.length > 100) ||
+            (usuario.telefone && usuario.telefone.length > 20) ||
+            (usuario.data_nascimento && usuario.data_nascimento.length > 100)
+        ) return MESSAGE.ERROR_REQUIRED_FIELDS;
 
-        const response = await fetch("http://localhost:5000/ollama", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                mensagem: mensagem,
-                idUsuario: idUsuario
-            })
-        });
+        usuario.senha_hash = await bcrypt.hash(usuario.senha_hash, 10);
 
-        if (!response.ok) {
+        let resultUsuario = await usuarioDAO.insertUsuario(usuario);
+
+        if (resultUsuario) {
             return {
-                status: false,
-                status_code: response.status,
-                message: "Erro ao conectar com o agente Ollama."
+                status: true,
+                status_code: 200,
+                message: 'Usuário criado com sucesso!',
+                usuario: resultUsuario
             };
+        } else {
+            return MESSAGE.ERROR_INTERNAL_SERVER_MODEL;
         }
-
-        const data = await response.json();
-
-        return {
-            status: true,
-            status_code: 200,
-            message: "Resposta obtida com sucesso!",
-            respostaIA: data
-        };
 
     } catch (error) {
-        console.log("ERRO AO CHAMAR OLLAMA:", error);
+        console.log(error);
+        return MESSAGE.ERROR_INTERNAL_SERVER_CONTROLLER;
+    }
+};
+
+/**
+ * ATUALIZAR
+ */
+const atualizarUsuario = async function (usuario, id, contentType) {
+    try {
+        if (contentType !== 'application/json') return MESSAGE.ERROR_CONTENT_TYPE;
+
+        if (
+            !id || isNaN(id) || id <= 0 ||
+            !usuario.nome || usuario.nome.length > 100 ||
+            !usuario.email || usuario.email.length > 150 ||
+            !usuario.senha || usuario.senha.length > 100 ||
+            (usuario.perfil && !['consumidor', 'admin', 'estabelecimento'].includes(usuario.perfil)) ||
+            (usuario.cpf && usuario.cpf.length > 100) ||
+            (usuario.cnpj && usuario.cnpj.length > 100) ||
+            (usuario.telefone && usuario.telefone.length > 20) ||
+            (usuario.data_nascimento && usuario.data_nascimento.length > 100)
+        ) return MESSAGE.ERROR_REQUIRED_FIELDS;
+
+        let resultUsuario = await buscarUsuario(parseInt(id));
+
+        if (resultUsuario.status_code !== 200) return resultUsuario;
+
+        usuario.id_usuario = parseInt(id);
+        usuario.senha_hash = await bcrypt.hash(usuario.senha, 10);
+
+        let result = await usuarioDAO.updateUsuario(usuario);
+
+        if (result) {
+            return {
+                status: true,
+                status_code: 200,
+                message: 'Usuário atualizado com sucesso!',
+                usuario: usuario
+            };
+        } else {
+            return MESSAGE.ERROR_INTERNAL_SERVER_MODEL;
+        }
+
+    } catch (error) {
+        console.log(error);
+        return MESSAGE.ERROR_INTERNAL_SERVER_CONTROLLER;
+    }
+};
+
+/**
+ * EXCLUIR
+ */
+const excluirUsuario = async function (id) {
+    try {
+        if (!id || isNaN(id) || id <= 0) return MESSAGE.ERROR_REQUIRED_FIELDS;
+
+        let resultUsuario = await buscarUsuario(parseInt(id));
+        if (resultUsuario.status_code !== 200) return resultUsuario;
+
+        let result = await usuarioDAO.deleteUsuario(parseInt(id));
+
+        if (result) {
+            return {
+                status: true,
+                status_code: 200,
+                message: 'Usuário excluído com sucesso!'
+            };
+        } else {
+            return MESSAGE.ERROR_INTERNAL_SERVER_MODEL;
+        }
+
+    } catch (error) {
+        console.log(error);
+        return MESSAGE.ERROR_INTERNAL_SERVER_CONTROLLER;
+    }
+};
+
+/**
+ * LISTAR TODOS
+ */
+const listarUsuarios = async function () {
+    try {
+        let resultUsuario = await usuarioDAO.selectAllUsuario();
+
+        if (resultUsuario && typeof resultUsuario === 'object' && resultUsuario.length > 0) {
+            return {
+                status: true,
+                status_code: 200,
+                items: resultUsuario.length,
+                usuarios: resultUsuario
+            };
+        } else {
+            return MESSAGE.ERROR_NOT_FOUND;
+        }
+
+    } catch (error) {
+        console.log(error);
+        return MESSAGE.ERROR_INTERNAL_SERVER_CONTROLLER;
+    }
+};
+
+/**
+ * BUSCAR POR ID
+ */
+const buscarUsuario = async function (id) {
+    try {
+        if (!id || isNaN(id) || id <= 0) return MESSAGE.ERROR_REQUIRED_FIELDS;
+
+        let resultUsuario = await usuarioDAO.selectByIdUsuario(parseInt(id));
+
+        if (resultUsuario) {
+            return {
+                status: true,
+                status_code: 200,
+                usuario: resultUsuario
+            };
+        } else {
+            return MESSAGE.ERROR_NOT_FOUND;
+        }
+
+    } catch (error) {
+        console.log(error);
         return MESSAGE.ERROR_INTERNAL_SERVER_CONTROLLER;
     }
 };
 
 module.exports = {
-    buscarPromocoes,
-    respostaOllama
+    inserirUsuario,
+    atualizarUsuario,
+    excluirUsuario,
+    listarUsuarios,
+    buscarUsuario,
+    loginUsuario
 };

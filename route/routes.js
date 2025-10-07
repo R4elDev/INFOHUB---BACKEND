@@ -134,18 +134,18 @@ router.post('/interagir', bodyParserJson, verificarToken, async (request, respon
         let contentType = request.headers['content-type'];
         let dadosBody = request.body;
 
-        let termoBusca = dadosBody.termoBusca;
+        let mensagem = dadosBody.mensagem;
         let idUsuario = dadosBody.idUsuario;
 
-        if (!termoBusca || !idUsuario) {
+        if (!mensagem || !idUsuario) {
             return response.status(400).json({
                 status: false,
                 status_code: 400,
-                message: "Campos 'termoBusca' e 'idUsuario' são obrigatórios."
+                message: "Campos 'mensagem' e 'idUsuario' são obrigatórios."
             });
         }
 
-        let resultado = await controllerChat.buscarPromocoes(termoBusca, idUsuario, contentType);
+        let resultado = await controllerChat.buscarPromocoes(mensagem, idUsuario, contentType);
 
         console.log("Resultado da busca:", resultado);
 
