@@ -17,6 +17,10 @@
   "description": "",
   "main": "app.js",
   "scripts": {
+    "start": "node app.js",
+    "dev": "nodemon app.js",
+    "docs": "node docs-server.js",
+    "docs:install": "npm install -g swagger-ui-serve",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
