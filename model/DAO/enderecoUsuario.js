@@ -31,10 +31,24 @@ const insertEnderecoUsuario = async function (endereco) {
         let result = await prisma.$executeRawUnsafe(sql);
 
         if (result) {
-            // Pegar o ID do endereço recém inserido
-            let sqlLastId = 'SELECT LAST_INSERT_ID() as id;';
-            let [{id}] = await prisma.$queryRawUnsafe(sqlLastId);
-            return id;
+            let sqlSelect = `
+                SELECT * 
+                FROM tbl_enderecoUsuario 
+                WHERE id_usuario = ${endereco.id_usuario} AND cep = '${endereco.cep}'
+                ORDER BY id_endereco DESC 
+                LIMIT 1;
+            `;
+            let enderecoCriado = await prisma.$queryRawUnsafe(sqlSelect);
+            
+            // Converter BigInt para Number
+            if (enderecoCriado && enderecoCriado.length > 0) {
+                return {
+                    ...enderecoCriado[0],
+                    id_endereco: Number(enderecoCriado[0].id_endereco),
+                    id_usuario: Number(enderecoCriado[0].id_usuario)
+                };
+            }
+            return false;
         } else {
             return false;
         }
@@ -123,6 +137,15 @@ const selectAllEnderecosUsuario = async function () {
 
         let rsEnderecos = await prisma.$queryRawUnsafe(sql);
 
+        // Converter BigInt para Number
+        if (rsEnderecos && rsEnderecos.length > 0) {
+            return rsEnderecos.map(endereco => ({
+                ...endereco,
+                id_endereco: Number(endereco.id_endereco),
+                id_usuario: Number(endereco.id_usuario)
+            }));
+        }
+
         return rsEnderecos;
 
     } catch (error) {
@@ -155,6 +178,15 @@ const selectEnderecoUsuarioById = async function (id_endereco) {
 
         let rsEndereco = await prisma.$queryRawUnsafe(sql);
 
+        // Converter BigInt para Number
+        if (rsEndereco && rsEndereco.length > 0) {
+            return rsEndereco.map(endereco => ({
+                ...endereco,
+                id_endereco: Number(endereco.id_endereco),
+                id_usuario: Number(endereco.id_usuario)
+            }));
+        }
+
         return rsEndereco;
 
     } catch (error) {
@@ -183,6 +215,15 @@ const selectEnderecosByUsuarioId = async function (id_usuario) {
         `;
 
         let rsEnderecos = await prisma.$queryRawUnsafe(sql);
+
+        // Converter BigInt para Number
+        if (rsEnderecos && rsEnderecos.length > 0) {
+            return rsEnderecos.map(endereco => ({
+                ...endereco,
+                id_endereco: Number(endereco.id_endereco),
+                id_usuario: Number(endereco.id_usuario)
+            }));
+        }
 
         return rsEnderecos;
 
