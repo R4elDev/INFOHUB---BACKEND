@@ -174,4 +174,138 @@ router.post('/respostaOllama', bodyParserJson, verificarToken, async (request, r
   response.json(resultado);
 });
 
+// ==============================
+// Rotas de Categorias
+// ==============================
+const controllerCategoria = require('../controller/categoria/categoriaController.js');
+
+// Criar nova categoria (protegido)
+router.post('/categoria', verificarToken, bodyParserJson, async (request, response) => {
+    let contentType = request.headers['content-type'];
+    let dadosBody = request.body;
+
+    let resultado = await controllerCategoria.createCategoria(dadosBody, contentType);
+
+    console.log(resultado);
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
+// Atualizar categoria por ID (protegido)
+router.put('/categoria/:id', verificarToken, bodyParserJson, async (request, response) => {
+    let contentType = request.headers['content-type'];
+    let id = request.params.id;
+    let dadosBody = request.body;
+
+    dadosBody.id_categoria = id;
+    let resultado = await controllerCategoria.updateCategoria(dadosBody, contentType);
+
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
+// Deletar categoria por ID (protegido)
+router.delete('/categoria/:id', verificarToken, async (request, response) => {
+    let id = request.params.id;
+
+    let resultado = await controllerCategoria.deleteCategoria(id);
+
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
+// Listar todas as categorias (público)
+router.get('/categorias', async (request, response) => {
+    let resultado = await controllerCategoria.getCategorias();
+
+    response.status(resultado.status_code || 200);
+    response.json(resultado);
+});
+
+// Buscar categoria por ID (público)
+router.get('/categoria/:id', async (request, response) => {
+    let id = request.params.id;
+
+    let resultado = await controllerCategoria.getCategoriaById(id);
+
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
+// Listar todas as categorias com seus produtos (público)
+router.get('/categorias-produtos', async (request, response) => {
+    let resultado = await controllerCategoria.getCategoriasComProdutos();
+
+    response.status(resultado.status_code || 200);
+    response.json(resultado);
+});
+
+// Buscar categoria por ID com seus produtos (público)
+router.get('/categoria-produtos/:id', async (request, response) => {
+    let id = request.params.id;
+
+    let resultado = await controllerCategoria.getCategoriaComProdutosById(id);
+
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
+// ==============================
+// Rotas de Produtos
+// ==============================
+const controllerProduto = require('../controller/produto/produtoController.js');
+
+// Criar novo produto (protegido)
+router.post('/produtos', verificarToken, bodyParserJson, async (request, response) => {
+    let contentType = request.headers['content-type'];
+    let dadosBody = request.body;
+
+    let resultado = await controllerProduto.createProduto(request, response);
+
+    console.log(resultado);
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
+// Atualizar produto por ID (protegido)
+router.put('/produto/:id', verificarToken, bodyParserJson, async (request, response) => {
+    let contentType = request.headers['content-type'];
+    let id = request.params.id;
+    let dadosBody = request.body;
+
+    dadosBody.id_produto = id;
+    let resultado = await controllerProduto.updateProduto(request, response);
+
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
+// Deletar produto por ID (protegido)
+router.delete('/produto/:id', verificarToken, async (request, response) => {
+    let id = request.params.id;
+
+    let resultado = await controllerProduto.deleteProduto(request, response);
+
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
+// Listar todos os produtos (público)
+router.get('/produtos', async (request, response) => {
+    let resultado = await controllerProduto.getProdutos(request, response);
+
+    response.status(resultado.status_code || 200);
+    response.json(resultado);
+});
+
+// Buscar produto por ID (público)
+router.get('/produto/:id', async (request, response) => {
+    let id = request.params.id;
+
+    let resultado = await controllerProduto.getProdutoById(request, response);
+
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
 module.exports = router;
