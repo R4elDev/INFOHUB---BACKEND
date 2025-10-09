@@ -469,6 +469,139 @@ components:
         message:
           type: string
           nullable: true
+
+    Produto:
+      type: object
+      properties:
+        id_produto:
+          type: integer
+          format: int64
+          example: 1
+        nome:
+          type: string
+          example: "Smartphone Samsung Galaxy"
+        descricao:
+          type: string
+          example: "Smartphone com 128GB de armazenamento"
+        id_categoria:
+          type: integer
+          example: 1
+        categoria:
+          type: string
+          example: "Eletrônicos"
+        preco:
+          type: number
+          format: double
+          example: 999.99
+        id_estabelecimento:
+          type: integer
+          example: 1
+        preco_promocional:
+          type: number
+          format: double
+          example: 899.99
+        data_inicio:
+          type: string
+          format: date
+          example: "2025-10-01"
+        data_fim:
+          type: string
+          format: date
+          example: "2025-10-31"
+
+    ProdutoRequest:
+      type: object
+      required:
+        - nome
+        - id_categoria
+        - id_estabelecimento
+        - preco
+      properties:
+        nome:
+          type: string
+          description: Nome do produto
+          example: "Smartphone Samsung Galaxy"
+        descricao:
+          type: string
+          description: Descrição do produto
+          example: "Smartphone com 128GB de armazenamento"
+        id_categoria:
+          type: integer
+          description: ID da categoria
+          example: 1
+        id_estabelecimento:
+          type: integer
+          description: ID do estabelecimento
+          example: 1
+        preco:
+          type: number
+          format: double
+          description: Preço do produto
+          example: 999.99
+        promocao:
+          type: object
+          description: Dados da promoção (opcional)
+          properties:
+            preco_promocional:
+              type: number
+              format: double
+              example: 899.99
+            data_inicio:
+              type: string
+              format: date
+              example: "2025-10-01"
+            data_fim:
+              type: string
+              format: date
+              example: "2025-10-31"
+
+    ProdutoResponse:
+      type: object
+      properties:
+        status:
+          type: boolean
+          example: true
+        status_code:
+          type: integer
+          example: 201
+        message:
+          type: string
+          example: "Produto criado com sucesso"
+        id:
+          type: integer
+          example: 1
+
+    ProdutosListResponse:
+      type: object
+      properties:
+        status:
+          type: boolean
+          example: true
+        status_code:
+          type: integer
+          example: 200
+        produtos:
+          type: array
+          items:
+            $ref: '#/components/schemas/Produto'
+        message:
+          type: string
+          nullable: true
+
+    ProdutoDetailResponse:
+      type: object
+      properties:
+        status:
+          type: boolean
+          example: true
+        status_code:
+          type: integer
+          example: 200
+        produto:
+          $ref: '#/components/schemas/Produto'
+        message:
+          type: string
+          nullable: true
           example: "quais as promoções?"
         user_id:
           type: integer
@@ -864,6 +997,134 @@ paths:
           $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/InternalError'
+  /produtos:
+    post:
+      tags:
+        - Produtos
+      summary: Criar novo produto
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProdutoRequest'
+      responses:
+        '201':
+          description: Produto criado com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProdutoResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+    get:
+      tags:
+        - Produtos
+      summary: Listar todos os produtos
+      responses:
+        '200':
+          description: Lista de produtos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProdutosListResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /produto/{id}:
+    put:
+      tags:
+        - Produtos
+      summary: Atualizar produto por ID
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProdutoRequest'
+      responses:
+        '200':
+          description: Produto atualizado com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProdutoResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+    delete:
+      tags:
+        - Produtos
+      summary: Deletar produto por ID
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Produto deletado com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProdutoResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+    get:
+      tags:
+        - Produtos
+      summary: Buscar produto por ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Produto encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProdutoDetailResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
   # ==============================
   # API PRINCIPAL (Node.js - Porta 8080)
   # ==============================
