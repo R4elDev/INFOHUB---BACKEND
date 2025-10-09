@@ -1,7 +1,7 @@
 /*****************************************************************************************
  * Objetivo --> Controller responsavel pela manipulação dos dados referentes a endereco de usuario
  * Data --> 09/10/2025
- * Autor --> GitHub Copilot
+ * Autor --> Israel Junior
  ****************************************************************************************/
 
 const enderecoUsuarioDAO = require('../../model/DAO/enderecoUsuario.js');

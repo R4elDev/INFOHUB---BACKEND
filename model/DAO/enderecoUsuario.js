@@ -1,7 +1,7 @@
 /*****************************************************************************************
  * Objetivo --> Model responsavel pelo CRUD de dados referente a enderecos de usuario no BANCO DE DADOS
  * Data --> 09/10/2025
- * Autor --> GitHub Copilot
+ * Autor --> Israel Junior
  ****************************************************************************************/
 
 const { PrismaClient } = require('@prisma/client');
