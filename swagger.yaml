@@ -2,11 +2,10 @@ openapi: 3.0.3
 info:
   title: InfoHub API - Sistema Completo
   description: |
-    API completa do InfoHub para gerenciamento de usuários, recuperação de senhas e chat com IA para busca de promoções.
+    API completa do InfoHub para gerenciamento de usuários, produtos, categorias e sistema de recuperação de senhas.
     
     ## Arquitetura
     - **API Principal**: Node.js/Express (porta 8080)
-    - **IA Service**: Python/FastAPI (porta 5001)
     - **Banco**: MySQL com Prisma ORM
     
     ## Autenticação
@@ -17,8 +16,9 @@ info:
     
     ## Serviços
     1. **Usuários**: Cadastro, login, CRUD
-    2. **Recuperação de Senha**: Solicitação, validação, redefinição
-    3. **Chat IA**: Busca inteligente de promoções
+    2. **Produtos**: Gerenciamento completo de produtos
+    3. **Categorias**: Gerenciamento de categorias de produtos
+    4. **Recuperação de Senha**: Solicitação, validação, redefinição
     
   version: 1.0.0
   contact:
@@ -30,29 +30,80 @@ info:
 servers:
   - url: http://localhost:8080/v1/infohub
     description: API Principal (Node.js)
-  - url: http://localhost:5001
-    description: Serviço de IA (Python)
 
 tags:
   - name: Usuários
     description: Gerenciamento de usuários
+  - name: Produtos
+    description: Gerenciamento de produtos
+  - name: Categorias
+    description: Gerenciamento de categorias
   - name: Autenticação
     description: Login e autenticação
   - name: Recuperação de Senha
     description: Sistema de recuperação de senha por email
   - name: Chat IA
     description: Interação com IA para busca de promoções
-  - name: IA Service
-    description: Endpoints diretos do serviço Python
 
 components:
-  securitySchemes:
-    BearerAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
-      
   schemas:
+    Categoria:
+      type: object
+      properties:
+        id_categoria:
+          type: integer
+          format: int64
+          example: 1
+        nome:
+          type: string
+          example: "Eletrônicos"
+        total_produtos:
+          type: integer
+          example: 5
+    
+    CategoriaComProdutos:
+      type: object
+      properties:
+        id_categoria:
+          type: integer
+          format: int64
+          example: 1
+        nome:
+          type: string
+          example: "Eletrônicos"
+        total_produtos:
+          type: integer
+          example: 2
+        produtos:
+          type: array
+          items:
+            type: object
+            properties:
+              id_produto:
+                type: integer
+                example: 1
+              nome:
+                type: string
+                example: "Smartphone"
+              descricao:
+                type: string
+                example: "Smartphone último modelo"
+              preco:
+                type: number
+                format: double
+                example: 999.99
+              preco_promocional:
+                type: number
+                format: double
+                example: 899.99
+              data_inicio_promocao:
+                type: string
+                format: date
+                example: "2025-10-01"
+              data_fim_promocao:
+                type: string
+                format: date
+                example: "2025-10-31"
     Usuario:
       type: object
       required:
@@ -184,22 +235,33 @@ components:
           description: Nova senha do usuário
           example: "novaSenha123"
           
-    ChatRequest:
+    CategoriaRequest:
       type: object
       required:
-        - mensagem
-        - idUsuario
+        - nome
       properties:
-        mensagem:
+        nome:
           type: string
-          description: Mensagem do usuário para a IA
-          example: "quais as promoções de leite?"
-        idUsuario:
+          description: Nome da categoria
+          example: "Eletrônicos"
+
+    CategoriaResponse:
+      type: object
+      properties:
+        status:
+          type: boolean
+          example: true
+        status_code:
           type: integer
-          description: ID do usuário logado
+          example: 201
+        message:
+          type: string
+          example: "Categoria criada com sucesso"
+        id:
+          type: integer
           example: 1
-          
-    ChatResponse:
+
+    CategoriasListResponse:
       type: object
       properties:
         status:
@@ -208,39 +270,60 @@ components:
         status_code:
           type: integer
           example: 200
+        categorias:
+          type: array
+          items:
+            $ref: '#/components/schemas/Categoria'
         message:
           type: string
-          example: "Resposta gerada com sucesso"
-        data:
-          type: object
-          properties:
-            reply:
-              type: string
-              description: Resposta da IA
-              example: "🛒 Encontrei 3 promoções de leite perto de você!"
-            confidence:
-              type: number
-              format: float
-              description: Confiança da resposta (0-1)
-              example: 0.95
-            response_time_ms:
-              type: integer
-              description: Tempo de resposta em milissegundos
-              example: 150
-            toolsUsed:
-              type: array
-              items:
-                type: string
-              example: ["classifier", "find_promotions"]
-              
-    FastChatRequest:
+          nullable: true
+
+    CategoriaDetailResponse:
       type: object
-      required:
-        - message
       properties:
+        status:
+          type: boolean
+          example: true
+        status_code:
+          type: integer
+          example: 200
+        categoria:
+          $ref: '#/components/schemas/Categoria'
         message:
           type: string
-          description: Mensagem para a IA
+          nullable: true
+
+    CategoriasComProdutosResponse:
+      type: object
+      properties:
+        status:
+          type: boolean
+          example: true
+        status_code:
+          type: integer
+          example: 200
+        categorias:
+          type: array
+          items:
+            $ref: '#/components/schemas/CategoriaComProdutos'
+        message:
+          type: string
+          nullable: true
+
+    CategoriaComProdutosDetailResponse:
+      type: object
+      properties:
+        status:
+          type: boolean
+          example: true
+        status_code:
+          type: integer
+          example: 200
+        categoria:
+          $ref: '#/components/schemas/CategoriaComProdutos'
+        message:
+          type: string
+          nullable: true
           example: "quais as promoções?"
         user_id:
           type: integer
@@ -293,8 +376,181 @@ components:
           type: string
           description: Detalhes do erro
           example: "Campo obrigatório não informado"
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
 
 paths:
+  /categoria:
+    post:
+      tags:
+        - Categorias
+      summary: Criar nova categoria
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoriaRequest'
+      responses:
+        '201':
+          description: Categoria criada com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoriaResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /categoria/{id}:
+    put:
+      tags:
+        - Categorias
+      summary: Atualizar categoria por ID
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoriaRequest'
+      responses:
+        '200':
+          description: Categoria atualizada com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoriaResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+    delete:
+      tags:
+        - Categorias
+      summary: Deletar categoria por ID
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Categoria deletada com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoriaResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+    get:
+      tags:
+        - Categorias
+      summary: Buscar categoria por ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Categoria encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoriaDetailResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /categorias:
+    get:
+      tags:
+        - Categorias
+      summary: Listar todas as categorias
+      responses:
+        '200':
+          description: Lista de categorias
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoriasListResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /categorias-produtos:
+    get:
+      tags:
+        - Categorias
+      summary: Listar todas as categorias com seus produtos
+      responses:
+        '200':
+          description: Lista de categorias com produtos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoriasComProdutosResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /categoria-produtos/{id}:
+    get:
+      tags:
+        - Categorias
+      summary: Buscar categoria por ID com seus produtos
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Categoria encontrada com produtos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoriaComProdutosDetailResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
   # ==============================
   # API PRINCIPAL (Node.js - Porta 8080)
   # ==============================
@@ -720,216 +976,3 @@ paths:
               schema:
                 $ref: '#/components/schemas/ChatResponse'
 
-  # ==============================
-  # SERVIÇO IA (Python - Porta 5001)
-  # ==============================
-  
-  /:
-    get:
-      tags:
-        - IA Service
-      summary: Status do serviço IA
-      description: Retorna informações sobre o status e modo do serviço de IA
-      servers:
-        - url: http://localhost:5001
-      responses:
-        '200':
-          description: Status do serviço
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  service:
-                    type: string
-                    example: "InfoHub AI Agent"
-                  version:
-                    type: string
-                    example: "4.0.0-LIGHTNING"
-                  mode:
-                    type: string
-                    example: "⚡ lightning"
-                  status:
-                    type: string
-                    example: "⚡ READY FOR SPEED"
-                  ai_usage:
-                    type: string
-                    example: "0%"
-                    
-  /chat:
-    post:
-      tags:
-        - IA Service
-      summary: Chat direto com IA
-      description: |
-        Endpoint direto para chat com IA (sem autenticação).
-        Otimizado para velocidade com sistema híbrido:
-        - Regras rápidas: 0-5ms (90% dos casos)
-        - LLM backup: 200-500ms (10% dos casos)
-        
-        **Tipos de resposta:**
-        - `greeting`: Saudações
-        - `general_promotions`: Lista geral de promoções
-        - `promotion_search`: Busca específica
-        - `best_nearby`: Melhores preços por região
-        - `how_it_works`: Como funciona
-        - `product_catalog`: Lista de produtos
-      servers:
-        - url: http://localhost:5001
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/FastChatRequest'
-            examples:
-              saudacao:
-                summary: Saudação
-                value:
-                  message: "oi"
-                  user_id: 1
-              lista_promocoes:
-                summary: Lista de promoções
-                value:
-                  message: "quais as promoções?"
-                  user_id: 1
-              busca_produto:
-                summary: Busca produto
-                value:
-                  message: "leite barato"
-                  user_id: 1
-      responses:
-        '200':
-          description: Resposta da IA
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/FastChatResponse'
-              examples:
-                resposta_rapida:
-                  summary: Resposta instantânea (regras)
-                  value:
-                    reply: "👋 Oi! Sou seu assistente de promoções do InfoHub!"
-                    confidence: 0.95
-                    response_time_ms: 2
-                    method: "greeting"
-                    toolsUsed: ["classifier"]
-                busca_promocoes:
-                  summary: Busca com banco de dados
-                  value:
-                    reply: "🛒 **Encontrei leite!**"
-                    confidence: 0.90
-                    response_time_ms: 150
-                    method: "promotion_search"
-                    toolsUsed: ["classifier", "find_promotions"]
-                    
-  /stats:
-    get:
-      tags:
-        - IA Service
-      summary: Estatísticas de performance
-      description: Retorna métricas de performance do sistema de IA
-      servers:
-        - url: http://localhost:5001
-      responses:
-        '200':
-          description: Estatísticas do sistema
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  agent:
-                    type: string
-                    example: "lightning (no AI)"
-                  total_requests:
-                    type: integer
-                    example: 1250
-                  cache_hits:
-                    type: integer
-                    example: 1000
-                  cache_hit_rate:
-                    type: string
-                    example: "80.0%"
-                  cache_size:
-                    type: integer
-                    example: 45
-                  avg_response_time_ms:
-                    type: string
-                    example: "35.2"
-                  target_time:
-                    type: string
-                    example: "< 100ms"
-                  ai_usage:
-                    type: string
-                    example: "0% (pure logic)"
-                    
-  /health:
-    get:
-      tags:
-        - IA Service
-      summary: Health check
-      description: Verifica se o serviço está funcionando
-      servers:
-        - url: http://localhost:5001
-      responses:
-        '200':
-          description: Serviço funcionando
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status:
-                    type: string
-                    example: "✅ OK"
-                  mode:
-                    type: string
-                    example: "🚀 ultra-fast"
-                  uptime:
-                    type: string
-                    example: "running"
-                  version:
-                    type: string
-                    example: "3.0.0-TURBO"
-                    
-  /ollama:
-    post:
-      tags:
-        - IA Service
-      summary: Compatibilidade Ollama (Legacy)
-      description: Endpoint de compatibilidade com formato antigo
-      servers:
-        - url: http://localhost:5001
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                mensagem:
-                  type: string
-                  example: "quais as promoções?"
-                idUsuario:
-                  type: integer
-                  example: 1
-      responses:
-        '200':
-          description: Resposta no formato antigo
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  reply:
-                    type: string
-                  toolsUsed:
-                    type: array
-                    items:
-                      type: string
-                  status:
-                    type: string
-                    example: "success"
-                  response_time_ms:
-                    type: integer
