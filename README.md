@@ -302,30 +302,6 @@ curl -X POST http://localhost:8080/v1/infohub/interagir \
   -d '{"mensagem":"oi","idUsuario":1}'
 ```
 
----
-
-## 📦 Deploy
-
-### **Produção recomendada:**
-
-1. **Node.js:** PM2 ou Docker
-2. **Python:** Gunicorn + supervisord
-3. **Banco:** MySQL 8.0 com backup automático
-4. **Ollama:** Servidor dedicado ou GPU
-
-### **Exemplo Docker:**
-```dockerfile
-# Dockerfile Node.js
-FROM node:20-alpine
-COPY . /app
-WORKDIR /app
-RUN npm install --production
-EXPOSE 8080
-CMD ["node", "app.js"]
-```
-
----
-
 ## 🤝 Contribuição
 
 1. Fork o projeto
