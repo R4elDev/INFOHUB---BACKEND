@@ -21,10 +21,23 @@ const insertCategoria = async function (categoria) {
         let result = await prisma.$executeRawUnsafe(sql);
 
         if (result) {
-            // Pegar o ID da categoria recém inserida
-            let sqlLastId = 'SELECT LAST_INSERT_ID() as id;';
-            let [{id}] = await prisma.$queryRawUnsafe(sqlLastId);
-            return id;
+            let sqlSelect = `
+                SELECT * 
+                FROM tbl_categoria 
+                WHERE nome = '${categoria.nome}' 
+                ORDER BY id_categoria DESC 
+                LIMIT 1;
+            `;
+            let categoriaCriada = await prisma.$queryRawUnsafe(sqlSelect);
+            
+            // Converter BigInt para Number
+            if (categoriaCriada && categoriaCriada.length > 0) {
+                return {
+                    ...categoriaCriada[0],
+                    id_categoria: Number(categoriaCriada[0].id_categoria)
+                };
+            }
+            return false;
         } else {
             return false;
         }

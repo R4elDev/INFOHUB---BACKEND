@@ -25,9 +25,16 @@ const insertProduto = async function (produto) {
             
             await prisma.$executeRawUnsafe(sqlProduto);
             
-            // 2. Pegar o ID do produto recém inserido
-            const sqlLastId = 'SELECT LAST_INSERT_ID() as id;';
-            const [{id}] = await prisma.$queryRawUnsafe(sqlLastId);
+            // 2. Buscar o produto recém inserido
+            let sqlSelect = `
+                SELECT * 
+                FROM tbl_produto 
+                WHERE nome = '${produto.nome}' AND id_categoria = ${produto.id_categoria}
+                ORDER BY id_produto DESC 
+                LIMIT 1;
+            `;
+            const produtoCriado = await prisma.$queryRawUnsafe(sqlSelect);
+            const id = Number(produtoCriado[0].id_produto);
             
             // 3. Inserir o preço do produto
             if (produto.preco) {
