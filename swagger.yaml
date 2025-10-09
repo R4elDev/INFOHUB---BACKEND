@@ -34,6 +34,8 @@ servers:
 tags:
   - name: Usuários
     description: Gerenciamento de usuários
+  - name: Estabelecimentos
+    description: Gerenciamento de estabelecimentos
   - name: Endereços de Usuário
     description: Gerenciamento de endereços de usuários
   - name: Produtos
@@ -602,6 +604,94 @@ components:
         message:
           type: string
           nullable: true
+
+    Estabelecimento:
+      type: object
+      properties:
+        id_estabelecimento:
+          type: integer
+          format: int64
+          example: 1
+        nome:
+          type: string
+          example: "Supermercado Central"
+        cnpj:
+          type: string
+          example: "12.345.678/0001-90"
+        telefone:
+          type: string
+          example: "(11) 3333-4444"
+        data_cadastro:
+          type: string
+          format: date-time
+          example: "2025-10-09T10:30:00Z"
+
+    EstabelecimentoRequest:
+      type: object
+      required:
+        - nome
+        - cnpj
+      properties:
+        nome:
+          type: string
+          description: Nome do estabelecimento
+          example: "Supermercado Central"
+        cnpj:
+          type: string
+          description: CNPJ do estabelecimento
+          example: "12.345.678/0001-90"
+        telefone:
+          type: string
+          description: Telefone do estabelecimento
+          example: "(11) 3333-4444"
+
+    EstabelecimentoResponse:
+      type: object
+      properties:
+        status:
+          type: boolean
+          example: true
+        status_code:
+          type: integer
+          example: 201
+        message:
+          type: string
+          example: "Estabelecimento criado com sucesso"
+        id:
+          type: integer
+          example: 1
+
+    EstabelecimentosListResponse:
+      type: object
+      properties:
+        status:
+          type: boolean
+          example: true
+        status_code:
+          type: integer
+          example: 200
+        estabelecimentos:
+          type: array
+          items:
+            $ref: '#/components/schemas/Estabelecimento'
+        message:
+          type: string
+          nullable: true
+
+    EstabelecimentoDetailResponse:
+      type: object
+      properties:
+        status:
+          type: boolean
+          example: true
+        status_code:
+          type: integer
+          example: 200
+        estabelecimento:
+          $ref: '#/components/schemas/Estabelecimento'
+        message:
+          type: string
+          nullable: true
           example: "quais as promoções?"
         user_id:
           type: integer
@@ -661,6 +751,135 @@ components:
       bearerFormat: JWT
 
 paths:
+  /estabelecimento:
+    post:
+      tags:
+        - Estabelecimentos
+      summary: Criar novo estabelecimento
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EstabelecimentoRequest'
+      responses:
+        '201':
+          description: Estabelecimento criado com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EstabelecimentoResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /estabelecimento/{id}:
+    put:
+      tags:
+        - Estabelecimentos
+      summary: Atualizar estabelecimento por ID
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EstabelecimentoRequest'
+      responses:
+        '200':
+          description: Estabelecimento atualizado com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EstabelecimentoResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+    delete:
+      tags:
+        - Estabelecimentos
+      summary: Deletar estabelecimento por ID
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Estabelecimento deletado com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EstabelecimentoResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+    get:
+      tags:
+        - Estabelecimentos
+      summary: Buscar estabelecimento por ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Estabelecimento encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EstabelecimentoDetailResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /estabelecimentos:
+    get:
+      tags:
+        - Estabelecimentos
+      summary: Listar todos os estabelecimentos
+      responses:
+        '200':
+          description: Lista de estabelecimentos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EstabelecimentosListResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
   /endereco-usuario:
     post:
       tags:

@@ -175,6 +175,64 @@ router.post('/respostaOllama', bodyParserJson, verificarToken, async (request, r
 });
 
 // ==============================
+// Rotas de Estabelecimentos
+// ==============================
+const controllerEstabelecimento = require('../controller/estabelecimento/estabelecimentoController.js');
+
+// Criar novo estabelecimento (protegido)
+router.post('/estabelecimento', verificarToken, bodyParserJson, async (request, response) => {
+    let contentType = request.headers['content-type'];
+    let dadosBody = request.body;
+
+    let resultado = await controllerEstabelecimento.createEstabelecimento(dadosBody, contentType);
+
+    console.log(resultado);
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
+// Atualizar estabelecimento por ID (protegido)
+router.put('/estabelecimento/:id', verificarToken, bodyParserJson, async (request, response) => {
+    let contentType = request.headers['content-type'];
+    let id = request.params.id;
+    let dadosBody = request.body;
+
+    dadosBody.id_estabelecimento = id;
+    let resultado = await controllerEstabelecimento.updateEstabelecimento(dadosBody, contentType);
+
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
+// Deletar estabelecimento por ID (protegido)
+router.delete('/estabelecimento/:id', verificarToken, async (request, response) => {
+    let id = request.params.id;
+
+    let resultado = await controllerEstabelecimento.deleteEstabelecimento(id);
+
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
+// Listar todos os estabelecimentos (público)
+router.get('/estabelecimentos', async (request, response) => {
+    let resultado = await controllerEstabelecimento.getEstabelecimentos();
+
+    response.status(resultado.status_code || 200);
+    response.json(resultado);
+});
+
+// Buscar estabelecimento por ID (público)
+router.get('/estabelecimento/:id', async (request, response) => {
+    let id = request.params.id;
+
+    let resultado = await controllerEstabelecimento.getEstabelecimentoById(id);
+
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
+// ==============================
 // Rotas de Endereços de Usuário
 // ==============================
 const controllerEnderecoUsuario = require('../controller/enderecoUsuario/enderecoUsuarioController.js');
