@@ -328,7 +328,7 @@ router.post('/produtos', verificarToken, bodyParserJson, async (request, respons
     let contentType = request.headers['content-type'];
     let dadosBody = request.body;
 
-    let resultado = await controllerProduto.createProduto(request, response);
+    let resultado = await controllerProduto.createProduto(dadosBody, contentType);
 
     console.log(resultado);
     response.status(resultado.status_code);
@@ -342,7 +342,7 @@ router.put('/produto/:id', verificarToken, bodyParserJson, async (request, respo
     let dadosBody = request.body;
 
     dadosBody.id_produto = id;
-    let resultado = await controllerProduto.updateProduto(request, response);
+    let resultado = await controllerProduto.updateProduto(dadosBody, contentType);
 
     response.status(resultado.status_code);
     response.json(resultado);
@@ -352,7 +352,7 @@ router.put('/produto/:id', verificarToken, bodyParserJson, async (request, respo
 router.delete('/produto/:id', verificarToken, async (request, response) => {
     let id = request.params.id;
 
-    let resultado = await controllerProduto.deleteProduto(request, response);
+    let resultado = await controllerProduto.deleteProduto(id);
 
     response.status(resultado.status_code);
     response.json(resultado);
@@ -360,7 +360,7 @@ router.delete('/produto/:id', verificarToken, async (request, response) => {
 
 // Listar todos os produtos (público)
 router.get('/produtos', async (request, response) => {
-    let resultado = await controllerProduto.getProdutos(request, response);
+    let resultado = await controllerProduto.getProdutos();
 
     response.status(resultado.status_code || 200);
     response.json(resultado);
@@ -370,7 +370,7 @@ router.get('/produtos', async (request, response) => {
 router.get('/produto/:id', async (request, response) => {
     let id = request.params.id;
 
-    let resultado = await controllerProduto.getProdutoById(request, response);
+    let resultado = await controllerProduto.getProdutoById(id);
 
     response.status(resultado.status_code);
     response.json(resultado);

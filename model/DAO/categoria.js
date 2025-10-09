@@ -110,11 +110,7 @@ const deleteCategoria = async function (id_categoria) {
 const selectAllCategorias = async function () {
     try {
         let sql = `
-            SELECT 
-                id_categoria,
-                nome,
-                (SELECT COUNT(*) FROM tbl_produto WHERE id_categoria = c.id_categoria) as total_produtos
-            FROM tbl_categoria c;
+            SELECT * FROM tbl_categoria;
         `;
 
         let rsCategorias = await prisma.$queryRawUnsafe(sql);
@@ -130,12 +126,7 @@ const selectAllCategorias = async function () {
 const selectCategoriaById = async function (id_categoria) {
     try {
         let sql = `
-            SELECT 
-                c.id_categoria,
-                c.nome,
-                (SELECT COUNT(*) FROM tbl_produto WHERE id_categoria = c.id_categoria) as total_produtos
-            FROM tbl_categoria c
-            WHERE c.id_categoria = ${id_categoria};
+            SELECT * FROM tbl_categoria where id_categoria = ${id_categoria};
         `;
 
         let rsCategoria = await prisma.$queryRawUnsafe(sql);
