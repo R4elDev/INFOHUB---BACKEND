@@ -175,6 +175,74 @@ router.post('/respostaOllama', bodyParserJson, verificarToken, async (request, r
 });
 
 // ==============================
+// Rotas de Endereços de Usuário
+// ==============================
+const controllerEnderecoUsuario = require('../controller/enderecoUsuario/enderecoUsuarioController.js');
+
+// Criar novo endereço de usuário (protegido)
+router.post('/endereco-usuario', verificarToken, bodyParserJson, async (request, response) => {
+    let contentType = request.headers['content-type'];
+    let dadosBody = request.body;
+
+    let resultado = await controllerEnderecoUsuario.createEnderecoUsuario(dadosBody, contentType);
+
+    console.log(resultado);
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
+// Atualizar endereço de usuário por ID (protegido)
+router.put('/endereco-usuario/:id', verificarToken, bodyParserJson, async (request, response) => {
+    let contentType = request.headers['content-type'];
+    let id = request.params.id;
+    let dadosBody = request.body;
+
+    dadosBody.id_endereco = id;
+    let resultado = await controllerEnderecoUsuario.updateEnderecoUsuario(dadosBody, contentType);
+
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
+// Deletar endereço de usuário por ID (protegido)
+router.delete('/endereco-usuario/:id', verificarToken, async (request, response) => {
+    let id = request.params.id;
+
+    let resultado = await controllerEnderecoUsuario.deleteEnderecoUsuario(id);
+
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
+// Listar todos os endereços de usuário (protegido)
+router.get('/enderecos-usuario', verificarToken, async (request, response) => {
+    let resultado = await controllerEnderecoUsuario.getEnderecosUsuario();
+
+    response.status(resultado.status_code || 200);
+    response.json(resultado);
+});
+
+// Buscar endereço de usuário por ID (protegido)
+router.get('/endereco-usuario/:id', verificarToken, async (request, response) => {
+    let id = request.params.id;
+
+    let resultado = await controllerEnderecoUsuario.getEnderecoUsuarioById(id);
+
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
+// Buscar endereços por ID do usuário (protegido)
+router.get('/usuario/:id/enderecos', verificarToken, async (request, response) => {
+    let id_usuario = request.params.id;
+
+    let resultado = await controllerEnderecoUsuario.getEnderecosByUsuarioId(id_usuario);
+
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
+// ==============================
 // Rotas de Categorias
 // ==============================
 const controllerCategoria = require('../controller/categoria/categoriaController.js');
