@@ -14,7 +14,7 @@ O **InfoHub** é uma plataforma completa que combina **Node.js**, **Python** e *
 
 ### 🎯 **Principais Funcionalidades**
 
-- 🤖 **Assistente IA Real** com Ollama + Phi3:mini
+- 🤖 **Assistente IA Real** com Ollama + tinydolphin:1.1b
 - 📍 **Busca por Localização** (cálculo de distância automático)
 - 💰 **Comparação de Preços** em tempo real
 - 🛍️ **Catálogo Completo** de produtos e estabelecimentos
@@ -55,7 +55,7 @@ O **InfoHub** é uma plataforma completa que combina **Node.js**, **Python** e *
 ### **Inteligência Artificial**
 - **Python** 3.11 - Processamento IA
 - **Ollama** - Runtime de modelos LLM
-- **Phi3:mini** - Modelo de linguagem (2.2GB)
+- **tinydolphin:1.1b** - Modelo de linguagem (636MB)
 - **FastAPI** - API Python para IA
 
 ### **Segurança & Autenticação**
@@ -83,13 +83,14 @@ INFOHUB---BACKEND/
 │       └── controllerUsuario.js   # CRUD de usuários
 │
 ├── 📂 python_agents/       # Sistema de IA Python
-│   ├── agente_real.py      # Agente principal com Ollama
-│   ├── server.py          # Servidor FastAPI
+│   ├── server_fast.py     # Servidor FastAPI principal
+│   ├── lightning_agent.py # Agente híbrido com Ollama
+│   ├── intent_classifier.py # Classificador de intenções
 │   ├── config.py          # Configurações e system message
 │   ├── tools.py           # Ferramentas (busca promoções)
-│   ├── database.py        # Conexão MySQL Python
-│   ├── memory.py          # Sistema de memória de conversas
-│   └── run_stable.py      # Inicializador do servidor
+│   ├── mysql_real.py      # Conexão MySQL Python
+│   ├── speed_config.py    # Configurações de performance
+│   └── requirements.txt   # Dependências Python
 │
 ├── 📂 model/               # Modelos de dados
 │   └── DAO/
@@ -159,7 +160,7 @@ pip install -r requirements.txt
 5. **Instale e configure Ollama:**
 ```bash
 # Instale o Ollama
-ollama pull phi3:mini
+ollama pull tinydolphin:1.1b
 ```
 
 ---
@@ -177,7 +178,7 @@ node app.js
 2. **Terminal 2 - Agente Python:**
 ```bash
 cd python_agents
-python run_stable.py
+python server_fast.py
 # 🤖 IA rodando em: http://localhost:5001
 ```
 
@@ -239,11 +240,13 @@ POST /v1/infohub/interagir
 
 ### **Características do Agente:**
 
-- 🧠 **Modelo:** Phi3:mini (2.2GB) - Otimizado para eficiência
+- ⚡ **Modo Relâmpago:** Sistema híbrido inteligente
+- 🚀 **Performance:** 0-5ms para casos comuns, 200ms para casos complexos  
+- 🧠 **Modelo:** tinydolphin:1.1b (636MB) - Usado apenas quando necessário
 - 💬 **Linguagem Natural:** Entende português brasileiro
 - 🔧 **Ferramentas:** Acesso ao banco de dados real
 - 📍 **Contextual:** Considera localização do usuário
-- 💾 **Memória:** Mantém contexto da conversa
+- 🎯 **Eficiência:** Regras rápidas para 80% dos casos, LLM para casos ambíguos
 
 ### **Exemplos de Conversação:**
 
@@ -291,7 +294,7 @@ Produto N→M Estabelecimento (através de Promocao)
 ```bash
 # Testar agente IA localmente
 cd python_agents
-python -c "from agente_real import fallback_response; print(fallback_response('quero leite', [], 1))"
+python -c "from lightning_agent import process_message; print(process_message('quero leite', 1))"
 
 # Testar API completa
 curl -X POST http://localhost:8080/v1/infohub/interagir \
