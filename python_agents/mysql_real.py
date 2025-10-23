@@ -293,3 +293,30 @@ class DatabaseManager:
 
 # Instância global que será usada pelo agente
 db_manager = DatabaseManager()
+
+def get_db_connection():
+    """
+    Função helper para obter conexão com o banco
+    Compatível com as funções do enhanced_agent
+    """
+    try:
+        import mysql.connector
+        
+        connection = mysql.connector.connect(
+            host='localhost',
+            database='db_infohub',
+            user='root',
+            password='bcd127',
+            port=3306,
+            charset='utf8mb4',
+            autocommit=True
+        )
+        
+        if connection.is_connected():
+            return connection
+        else:
+            return None
+            
+    except Exception as e:
+        print(f"❌ Erro ao conectar com MySQL: {e}")
+        return None

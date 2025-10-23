@@ -354,6 +354,168 @@ def faq_answer(question: str) -> ToolResult:
     return ToolResult(ok=True, status=200, data={"answer": _FAQ["foco"]})
 
 
+# ========= FUNÇÕES PARA ENHANCED AGENT =========
+def get_available_products() -> List[Dict[str, Any]]:
+    """Retorna lista de produtos disponíveis para o catálogo"""
+    try:
+        from mysql_real import get_db_connection
+        
+        conn = get_db_connection()
+        if not conn:
+            return []
+        
+        cursor = conn.cursor(dictionary=True)
+        
+        # Busca produtos únicos com suas categorias
+        query = """
+        SELECT DISTINCT 
+            p.nome,
+            p.categoria,
+            COUNT(*) as total_ofertas,
+            MIN(p.preco) as menor_preco
+        FROM promocoes p 
+        WHERE p.ativo = 1 
+        GROUP BY p.nome, p.categoria
+        ORDER BY p.categoria, p.nome
+        LIMIT 50
+        """
+        
+        cursor.execute(query)
+        results = cursor.fetchall()
+        
+        cursor.close()
+        conn.close()
+        
+        return results or []
+        
+    except Exception as e:
+        print(f"❌ Erro ao buscar produtos: {e}")
+        return []
+
+def get_top_promotions(limit: int = 5) -> List[Dict[str, Any]]:
+    """Retorna as top promoções gerais"""
+    try:
+        from mysql_real import get_db_connection
+        
+        conn = get_db_connection()
+        if not conn:
+            return []
+        
+        cursor = conn.cursor(dictionary=True)
+        
+        # Busca as melhores promoções
+        query = """
+        SELECT 
+            p.nome as produto,
+            p.preco,
+            p.preco_original,
+            p.loja,
+            p.endereco,
+            ROUND(((p.preco_original - p.preco) / p.preco_original * 100), 0) as desconto
+        FROM promocoes p 
+        WHERE p.ativo = 1 
+            AND p.preco_original > p.preco
+            AND p.preco > 0
+        ORDER BY desconto DESC, p.preco ASC
+        LIMIT %s
+        """
+        
+        cursor.execute(query, (limit,))
+        results = cursor.fetchall()
+        
+        cursor.close()
+        conn.close()
+        
+        return results or []
+        
+    except Exception as e:
+        print(f"❌ Erro ao buscar promoções: {e}")
+        return []
+
+def search_product_promotions(product: str) -> List[Dict[str, Any]]:
+    """Busca promoções de um produto específico"""
+    try:
+        from mysql_real import get_db_connection
+        
+        conn = get_db_connection()
+        if not conn:
+            return []
+        
+        cursor = conn.cursor(dictionary=True)
+        
+        # Busca promoções do produto
+        query = """
+        SELECT 
+            p.nome,
+            p.preco,
+            p.preco_original,
+            p.loja,
+            p.endereco,
+            p.categoria,
+            ROUND(((p.preco_original - p.preco) / p.preco_original * 100), 0) as desconto
+        FROM promocoes p 
+        WHERE p.ativo = 1 
+            AND (p.nome LIKE %s OR p.categoria LIKE %s)
+            AND p.preco > 0
+        ORDER BY p.preco ASC
+        LIMIT 10
+        """
+        
+        search_term = f"%{product}%"
+        cursor.execute(query, (search_term, search_term))
+        results = cursor.fetchall()
+        
+        cursor.close()
+        conn.close()
+        
+        return results or []
+        
+    except Exception as e:
+        print(f"❌ Erro ao buscar promoções do produto: {e}")
+        return []
+
+def search_best_local_prices(product: str, user_id: Optional[int] = None) -> List[Dict[str, Any]]:
+    """Busca melhores preços locais de um produto"""
+    try:
+        from mysql_real import get_db_connection
+        
+        conn = get_db_connection()
+        if not conn:
+            return []
+        
+        cursor = conn.cursor(dictionary=True)
+        
+        # Por enquanto, busca geral (pode ser melhorada com localização do usuário)
+        query = """
+        SELECT 
+            p.nome,
+            p.preco,
+            p.preco_original,
+            p.loja,
+            p.endereco,
+            p.categoria,
+            ROUND(((p.preco_original - p.preco) / p.preco_original * 100), 0) as desconto
+        FROM promocoes p 
+        WHERE p.ativo = 1 
+            AND (p.nome LIKE %s OR p.categoria LIKE %s)
+            AND p.preco > 0
+        ORDER BY p.preco ASC, desconto DESC
+        LIMIT 8
+        """
+        
+        search_term = f"%{product}%"
+        cursor.execute(query, (search_term, search_term))
+        results = cursor.fetchall()
+        
+        cursor.close()
+        conn.close()
+        
+        return results or []
+        
+    except Exception as e:
+        print(f"❌ Erro ao buscar preços locais: {e}")
+        return []
+
 # ========= Registro =========
 def health_ping(meta: Optional[Dict[str, Any]] = None) -> ToolResult:
     """Tool de verificação rápida de conectividade do agent."""
