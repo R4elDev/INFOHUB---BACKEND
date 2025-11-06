@@ -11,7 +11,7 @@ async function perguntarGroq(mensagem, contexto = '') {
     const response = await axios.post(
       GROQ_API_URL,
       {
-        model: 'mixtral-8x7b-32768', // Modelo mais recente e suportado pela Groq
+        model: 'llama-3.3-70b-versatile', // Modelo de produção atual do Groq (substitui llama3-70b-8192)
         messages: [
           { role: 'system', content: contexto },
           { role: 'user', content: mensagem }
