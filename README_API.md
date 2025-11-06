@@ -145,6 +145,38 @@ curl -X POST http://localhost:5001/chat \
   }'
 ```
 
+### 5. **Chat com IA Groq (produtos do banco)**
+
+Endpoint para chat inteligente baseado nos dados do banco de produtos, usando LLM via Groq.
+
+**POST /v1/infohub/chat-groq**
+
+**Body:**
+```json
+{
+  "pergunta": "Quais produtos estão em promoção?"
+}
+```
+
+**Resposta:**
+```json
+{
+  "resposta": "Aqui estão os produtos em promoção: ..."
+}
+```
+
+**Exemplo de uso com curl:**
+```bash
+curl -X POST http://localhost:8080/v1/infohub/chat-groq \
+  -H "Content-Type: application/json" \
+  -d '{
+    "pergunta": "Quais produtos estão em promoção?"
+  }'
+```
+
+- O modelo LLM irá interpretar a pergunta e responder com base nos produtos cadastrados no banco.
+- Pode ser consumido por apps mobile, web ou qualquer cliente HTTP.
+
 ## 📊 Monitoramento
 
 ### Status dos serviços:

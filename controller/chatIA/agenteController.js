@@ -6,7 +6,6 @@
 
 const MESSAGE = require('../../modulo/config.js');
 const agenteDAO = require('../../model/DAO/agente.js');
-const { executarAgentePython } = require('../../services/agentePythonService.js');
 
 /**
  * ⚡ BUSCAR PROMOÇÕES COM AGENTE IA ULTRA-RÁPIDO - LINGUAGEM NATURAL
@@ -28,23 +27,17 @@ const buscarPromocoes = async function (mensagem, idUsuario, contentType) {
         const termoBusca = extrairProdutoSimples(mensagem);
         let dadosPromocoes = await agenteDAO.buscarPromocoes(termoBusca, idUsuario);
 
-        // 2) Chamar o agente ULTRA-RÁPIDO (sem Ollama)
-        const agentResult = await executarAgentePython(mensagem, idUsuario, dadosPromocoes);
-
-        // 3) Resposta unificada e otimizada
+        // 2) Resposta simples sem agente Python (use Groq em vez disso)
         return {
             status: true,
             status_code: 200,
-            message: 'Resposta processada pelo agente ultra-rápido!',
+            message: 'Use o endpoint /chat-groq para IA inteligente',
             quantidade: dadosPromocoes ? dadosPromocoes.length : 0,
             promocoes: dadosPromocoes || [],
-            // 🚀 Resposta do agente relâmpago
-            reply: agentResult.reply,
-            tools_used: agentResult.toolsUsed || [],
-            response_time_ms: agentResult.response_time_ms,
-            confidence: agentResult.confidence,
-            method: agentResult.method,
-            agent_version: "lightning-v4.0"
+            reply: `Encontrei ${dadosPromocoes ? dadosPromocoes.length : 0} promoções. Para respostas inteligentes, use o endpoint /chat-groq`,
+            response_time_ms: 10,
+            method: "simple_search",
+            agent_version: "groq-redirect"
         };
 
     } catch (error) {
