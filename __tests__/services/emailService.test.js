@@ -1,7 +1,7 @@
-const { enviarEmailDeRecuperacao } = require('../../services/emailService');
-
-// Mock do nodemailer
+// Mock do nodemailer primeiro
 jest.mock('nodemailer');
+
+const { enviarEmailDeRecuperacao } = require('../../services/emailService');
 const nodemailer = require('nodemailer');
 
 describe('EmailService', () => {
@@ -19,7 +19,7 @@ describe('EmailService', () => {
       sendMail: jest.fn().mockResolvedValue({ messageId: 'test-message-id' })
     };
 
-    nodemailer.createTransporter.mockReturnValue(mockTransporter);
+    nodemailer.createTransport.mockReturnValue(mockTransporter);
   });
 
   afterEach(() => {
@@ -36,7 +36,7 @@ describe('EmailService', () => {
       await enviarEmailDeRecuperacao(destinatario, codigo);
 
       // Assert
-      expect(nodemailer.createTransporter).toHaveBeenCalledWith({
+      expect(nodemailer.createTransport).toHaveBeenCalledWith({
         service: 'gmail',
         auth: {
           user: 'test@example.com',
@@ -64,7 +64,7 @@ describe('EmailService', () => {
       await enviarEmailDeRecuperacao(destinatario, codigo);
 
       // Assert
-      expect(nodemailer.createTransporter).toHaveBeenCalledWith({
+      expect(nodemailer.createTransport).toHaveBeenCalledWith({
         service: 'gmail',
         auth: {
           user: 'custom@email.com',
@@ -115,7 +115,7 @@ describe('EmailService', () => {
       const codigo = '123456';
       const erro = new Error('Falha na configuração do transporter');
 
-      nodemailer.createTransporter.mockImplementation(() => {
+      nodemailer.createTransport.mockImplementation(() => {
         throw erro;
       });
 

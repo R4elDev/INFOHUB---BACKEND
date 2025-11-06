@@ -4,7 +4,7 @@ module.exports = {
   
   // Padrão de arquivos de teste
   testMatch: [
-    '**/__tests__/**/*.js',
+    '**/__tests__/**/*.test.js',
     '**/?(*.)+(spec|test).js'
   ],
   

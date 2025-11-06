@@ -8,7 +8,7 @@ const {
   testProducts,
   validateApiResponse,
   delay
-} = require('./helpers/testHelpers');
+} = require('../helpers/testHelpers');
 
 describe('Exemplo de Testes - INFOHUB Backend', () => {
   describe('Test Helpers', () => {

@@ -40,22 +40,24 @@ describe('GroqService', () => {
 
       // Assert
       expect(resultado).toBe(respostaEsperada);
+      expect(mockedAxios.post).toHaveBeenCalledTimes(1);
+      
+      // Verificar URL
       expect(mockedAxios.post).toHaveBeenCalledWith(
         'https://api.groq.com/openai/v1/chat/completions',
-        expect.objectContaining({
-          model: 'llama-3.1-8b-instant',
-          messages: expect.arrayContaining([
-            expect.objectContaining({ role: 'system' }),
-            expect.objectContaining({ role: 'user', content: mensagem })
-          ])
-        }),
-        expect.objectContaining({
-          headers: {
-            'Authorization': 'Bearer test-groq-key',
-            'Content-Type': 'application/json'
-          }
-        })
+        expect.any(Object),
+        expect.any(Object)
       );
+      
+      // Verificar estrutura da requisição
+      const [url, body, config] = mockedAxios.post.mock.calls[0];
+      expect(body.model).toBe('llama-3.1-8b-instant');
+      expect(body.messages).toHaveLength(2);
+      expect(body.messages[0].role).toBe('system');
+      expect(body.messages[0].content).toContain(contexto); // Verifica se contém o contexto
+      expect(body.messages[1].role).toBe('user');
+      expect(body.messages[1].content).toBe(mensagem);
+      expect(config.headers['Authorization']).toBe('Bearer test-groq-key');
     });
 
     it('deve funcionar sem contexto', async () => {
