@@ -1,6 +1,0 @@
-tree 292f1a1830d649ccd109573dd255ff987be3c066
-parent 5617c28ff4e0ec9b02ef08f22fbdf2d39a8aca4b
-author Israel junior <raraeldev@gmail.com> 1760030241 -0300
-committer Israel junior <raraeldev@gmail.com> 1760030241 -0300
-
-Feita rotas de cadastro de produto e cadastro de categorias, junto com todo o crud
