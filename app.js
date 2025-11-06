@@ -26,18 +26,19 @@
  * POST E PUT PRECISAM DO BodyParserJson para funcionar
  **********************************************************************************************************************/
 
- const express   = require('express')
- const cors      = require('cors')
- const app       = express()
+require('dotenv').config(); // Carrega variáveis do .env
+const express   = require('express')
+const cors      = require('cors')
+const app       = express()
 
- app.use(cors())
- app.use(express.json())
-
-
- const routes = require('./route/routes.js')
+app.use(cors())
+app.use(express.json())
 
 
- // Prefixo base da API
+const routes = require('./route/routes.js')
+
+
+// Prefixo base da API
 app.use('/v1/infohub', routes)
 
 app.listen('8080',function(){

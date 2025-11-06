@@ -127,6 +127,7 @@ router.post('/redefinir-senha', bodyParserJson, async (request,response) => {
 
 // Controller responsável pela busca de promoções via IA
 const controllerChat = require('../controller/chatIA/agenteController.js');
+const controllerGroq = require('../controller/chatIA/groqController.js');
 
 // Busca promoções (público ou autenticado conforme necessidade)
 router.post('/interagir', bodyParserJson, verificarToken, async (request, response) => {
@@ -172,6 +173,26 @@ router.post('/respostaOllama', bodyParserJson, verificarToken, async (request, r
   console.log(resultado);
   response.status(resultado.status_code);
   response.json(resultado);
+});
+
+// Nova rota para integração com Groq
+router.post('/groq', bodyParserJson, async (req, res) => {
+  await controllerGroq.interpretarPergunta(req, res);
+});
+
+// Endpoint de chat com IA Groq (público ou autenticado)
+router.post('/chat-groq', bodyParserJson, async (req, res) => {
+  /*
+    Espera body:
+    {
+      "pergunta": "sua pergunta aqui"
+    }
+    Retorna:
+    {
+      "resposta": "resposta interpretada pelo LLM"
+    }
+  */
+  await controllerGroq.interpretarPergunta(req, res);
 });
 
 // ==============================
