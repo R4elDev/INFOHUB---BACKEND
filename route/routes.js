@@ -1236,4 +1236,49 @@ router.get('/post/:id_post/estatisticas', verificarToken, async (request, respon
     response.json(resultado);
 });
 
+// ==============================
+// Rotas de INFOCASH - SISTEMA DE PONTOS
+// ==============================
+const controllerInfocash = require('../controller/infocash/infocashController.js');
+
+// Buscar saldo atual do usuário (próprio usuário ou admin)
+router.get('/infocash/saldo/:id', verificarProprietarioOuAdmin, async (request, response) => {
+    await controllerInfocash.getSaldo(request, response);
+});
+
+// Buscar histórico de transações do usuário (próprio usuário ou admin)
+router.get('/infocash/historico/:id', verificarProprietarioOuAdmin, async (request, response) => {
+    await controllerInfocash.getHistorico(request, response);
+});
+
+// Buscar resumo de pontos por tipo de ação (próprio usuário ou admin)
+router.get('/infocash/resumo/:id', verificarProprietarioOuAdmin, async (request, response) => {
+    await controllerInfocash.getResumo(request, response);
+});
+
+// Buscar informações completas do usuário - saldo + resumo (próprio usuário ou admin)
+router.get('/infocash/perfil/:id', verificarProprietarioOuAdmin, async (request, response) => {
+    await controllerInfocash.getPerfilCompleto(request, response);
+});
+
+// Buscar transações por período (próprio usuário ou admin)
+router.get('/infocash/periodo/:id', verificarProprietarioOuAdmin, async (request, response) => {
+    await controllerInfocash.getTransacoesPorPeriodo(request, response);
+});
+
+// Conceder pontos manualmente (apenas admin)
+router.post('/infocash/conceder', verificarAdmin, bodyParserJson, async (request, response) => {
+    await controllerInfocash.concederPontos(request, response);
+});
+
+// Buscar ranking de usuários com mais pontos (protegido)
+router.get('/infocash/ranking', verificarToken, async (request, response) => {
+    await controllerInfocash.getRanking(request, response);
+});
+
+// Buscar estatísticas gerais do sistema (apenas admin)
+router.get('/infocash/estatisticas', verificarAdmin, async (request, response) => {
+    await controllerInfocash.getEstatisticas(request, response);
+});
+
 module.exports = router;

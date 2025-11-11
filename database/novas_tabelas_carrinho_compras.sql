@@ -63,6 +63,30 @@ ALTER TABLE tbl_notificacao
 MODIFY COLUMN tipo ENUM('promocao','alerta','social','compra','carrinho');
 
 -- =============================================
+-- TABELA INFOCASH - SISTEMA DE PONTOS
+-- =============================================
+
+-- Tabela para gerenciar pontos InfoCash dos usuários
+CREATE TABLE IF NOT EXISTS tbl_infocash (
+    id_transacao INT AUTO_INCREMENT PRIMARY KEY,
+    id_usuario INT NOT NULL,
+    tipo_acao ENUM('avaliacao_promocao','cadastro_produto','avaliacao_empresa') NOT NULL,
+    pontos INT NOT NULL,
+    descricao VARCHAR(255) NOT NULL,
+    data_transacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    referencia_id INT NULL, -- ID da avaliação, produto ou empresa relacionada
+    CONSTRAINT fk_infocash_usuario FOREIGN KEY (id_usuario) REFERENCES tbl_usuario(id_usuario) ON DELETE CASCADE
+);
+
+-- Tabela para armazenar saldo atual de cada usuário (para performance)
+CREATE TABLE IF NOT EXISTS tbl_saldo_infocash (
+    id_usuario INT PRIMARY KEY,
+    saldo_total INT DEFAULT 0,
+    ultima_atualizacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_saldo_usuario FOREIGN KEY (id_usuario) REFERENCES tbl_usuario(id_usuario) ON DELETE CASCADE
+);
+
+-- =============================================
 -- ÍNDICES PARA PERFORMANCE
 -- =============================================
 
@@ -84,6 +108,11 @@ CREATE INDEX idx_item_produto ON tbl_itemCompra(id_produto);
 CREATE INDEX idx_avaliacao_usuario ON tbl_avaliacao(id_usuario);
 CREATE INDEX idx_avaliacao_produto ON tbl_avaliacao(id_produto);
 CREATE INDEX idx_avaliacao_estabelecimento ON tbl_avaliacao(id_estabelecimento);
+
+-- Índices para infocash
+CREATE INDEX idx_infocash_usuario ON tbl_infocash(id_usuario);
+CREATE INDEX idx_infocash_tipo ON tbl_infocash(tipo_acao);
+CREATE INDEX idx_infocash_data ON tbl_infocash(data_transacao);
 
 -- =============================================
 -- TRIGGERS PARA NOTIFICAÇÕES AUTOMÁTICAS
@@ -123,6 +152,73 @@ BEGIN
     SET NEW.subtotal = NEW.quantidade * NEW.preco_unitario;
 END//
 
+-- =============================================
+-- TRIGGERS PARA SISTEMA INFOCASH
+-- =============================================
+
+-- Trigger para conceder pontos quando avaliar uma promoção
+CREATE TRIGGER tr_infocash_avaliacao_promocao
+AFTER INSERT ON tbl_avaliacao
+FOR EACH ROW
+BEGIN
+    DECLARE pontos_ganhos INT DEFAULT 0;
+    
+    -- Se avaliou um produto (pode estar em promoção)
+    IF NEW.id_produto IS NOT NULL THEN
+        -- Verifica se o produto tem promoção ativa
+        IF EXISTS (SELECT 1 FROM tbl_promocao WHERE id_produto = NEW.id_produto AND data_fim >= NOW()) THEN
+            SET pontos_ganhos = 15; -- 15 pontos por avaliar produto em promoção
+            
+            INSERT INTO tbl_infocash (id_usuario, tipo_acao, pontos, descricao, referencia_id)
+            VALUES (NEW.id_usuario, 'avaliacao_promocao', pontos_ganhos, 
+                   'Pontos ganhos por avaliar produto em promoção', NEW.id_avaliacao);
+        END IF;
+    END IF;
+    
+    -- Se avaliou um estabelecimento
+    IF NEW.id_estabelecimento IS NOT NULL THEN
+        SET pontos_ganhos = 10; -- 10 pontos por avaliar estabelecimento
+        
+        INSERT INTO tbl_infocash (id_usuario, tipo_acao, pontos, descricao, referencia_id)
+        VALUES (NEW.id_usuario, 'avaliacao_empresa', pontos_ganhos, 
+               'Pontos ganhos por avaliar estabelecimento', NEW.id_avaliacao);
+    END IF;
+    
+    -- Atualizar saldo do usuário
+    IF pontos_ganhos > 0 THEN
+        INSERT INTO tbl_saldo_infocash (id_usuario, saldo_total)
+        VALUES (NEW.id_usuario, pontos_ganhos)
+        ON DUPLICATE KEY UPDATE saldo_total = saldo_total + pontos_ganhos;
+    END IF;
+END//
+
+-- Trigger para conceder pontos quando cadastrar produto (se usuário for estabelecimento)
+CREATE TRIGGER tr_infocash_cadastro_produto
+AFTER INSERT ON tbl_produto
+FOR EACH ROW
+BEGIN
+    DECLARE id_usuario_estabelecimento INT;
+    DECLARE pontos_ganhos INT DEFAULT 5; -- 5 pontos por cadastrar produto
+    
+    -- Buscar o usuário responsável pelo estabelecimento
+    -- (assumindo que existe uma relação entre estabelecimento e usuário)
+    SELECT id_usuario INTO id_usuario_estabelecimento 
+    FROM tbl_estabelecimento 
+    WHERE id_estabelecimento = NEW.id_estabelecimento 
+    LIMIT 1;
+    
+    IF id_usuario_estabelecimento IS NOT NULL THEN
+        INSERT INTO tbl_infocash (id_usuario, tipo_acao, pontos, descricao, referencia_id)
+        VALUES (id_usuario_estabelecimento, 'cadastro_produto', pontos_ganhos, 
+               'Pontos ganhos por cadastrar novo produto', NEW.id_produto);
+        
+        -- Atualizar saldo do usuário
+        INSERT INTO tbl_saldo_infocash (id_usuario, saldo_total)
+        VALUES (id_usuario_estabelecimento, pontos_ganhos)
+        ON DUPLICATE KEY UPDATE saldo_total = saldo_total + pontos_ganhos;
+    END IF;
+END//
+
 DELIMITER ;
 
 -- =============================================
@@ -160,6 +256,25 @@ INNER JOIN tbl_estabelecimento e ON c.id_estabelecimento = e.id_estabelecimento
 LEFT JOIN tbl_itemCompra ic ON c.id_compra = ic.id_compra
 GROUP BY c.id_compra;
 
+-- View para dashboard InfoCash do usuário
+CREATE VIEW vw_infocash_usuario AS
+SELECT 
+    s.id_usuario,
+    u.nome as nome_usuario,
+    s.saldo_total,
+    s.ultima_atualizacao,
+    COUNT(i.id_transacao) as total_transacoes,
+    COUNT(CASE WHEN i.tipo_acao = 'avaliacao_promocao' THEN 1 END) as avaliacoes_promocao,
+    COUNT(CASE WHEN i.tipo_acao = 'cadastro_produto' THEN 1 END) as cadastros_produto,
+    COUNT(CASE WHEN i.tipo_acao = 'avaliacao_empresa' THEN 1 END) as avaliacoes_empresa,
+    SUM(CASE WHEN i.tipo_acao = 'avaliacao_promocao' THEN i.pontos ELSE 0 END) as pontos_avaliacoes_promocao,
+    SUM(CASE WHEN i.tipo_acao = 'cadastro_produto' THEN i.pontos ELSE 0 END) as pontos_cadastros_produto,
+    SUM(CASE WHEN i.tipo_acao = 'avaliacao_empresa' THEN i.pontos ELSE 0 END) as pontos_avaliacoes_empresa
+FROM tbl_saldo_infocash s
+INNER JOIN tbl_usuario u ON s.id_usuario = u.id_usuario
+LEFT JOIN tbl_infocash i ON s.id_usuario = i.id_usuario
+GROUP BY s.id_usuario, u.nome, s.saldo_total, s.ultima_atualizacao;
+
 -- =============================================
 -- DADOS DE TESTE (OPCIONAL)
 -- =============================================
@@ -175,6 +290,43 @@ INSERT IGNORE INTO tbl_produto (nome, descricao, id_categoria) VALUES
 ('Sabonete Líquido', 'Sabonete líquido neutro', 3),
 ('Detergente Líquido', 'Detergente concentrado', 4);
 
+-- =============================================
+-- ALTERAÇÕES PARA INTEGRAÇÃO COM INFOCASH
+-- =============================================
+
+-- Adicionar campo id_usuario na tabela de estabelecimento se não existir
+-- (Necessário para o trigger de cadastro de produto funcionar)
+ALTER TABLE tbl_estabelecimento 
+ADD COLUMN id_usuario INT NULL,
+ADD CONSTRAINT fk_estabelecimento_usuario FOREIGN KEY (id_usuario) REFERENCES tbl_usuario(id_usuario);
+
+-- =============================================
+-- DADOS DE EXEMPLO PARA TESTE DO SISTEMA
+-- =============================================
+
+-- Inserir saldos iniciais para usuários existentes
+INSERT INTO tbl_saldo_infocash (id_usuario, saldo_total)
+SELECT id_usuario, 0 FROM tbl_usuario
+ON DUPLICATE KEY UPDATE saldo_total = saldo_total;
+
+-- Exemplos de transações InfoCash para teste
+INSERT INTO tbl_infocash (id_usuario, tipo_acao, pontos, descricao, referencia_id) VALUES
+(1, 'avaliacao_empresa', 10, 'Pontos ganhos por avaliar estabelecimento', 1),
+(1, 'avaliacao_promocao', 15, 'Pontos ganhos por avaliar produto em promoção', 2),
+(2, 'cadastro_produto', 5, 'Pontos ganhos por cadastrar novo produto', 3);
+
+-- Atualizar saldos baseado nas transações de exemplo
+UPDATE tbl_saldo_infocash s
+SET saldo_total = (
+    SELECT COALESCE(SUM(pontos), 0)
+    FROM tbl_infocash i 
+    WHERE i.id_usuario = s.id_usuario
+);
+
+-- =============================================
+-- VERIFICAÇÕES FINAIS
+-- =============================================
+
 -- Verificar se as tabelas foram criadas corretamente
 SELECT 'Carrinho' as tabela, COUNT(*) as registros FROM tbl_carrinho
 UNION ALL
@@ -182,4 +334,8 @@ SELECT 'Compras', COUNT(*) FROM tbl_compra
 UNION ALL
 SELECT 'Itens Compra', COUNT(*) FROM tbl_itemCompra
 UNION ALL
-SELECT 'Avaliações', COUNT(*) FROM tbl_avaliacao;
+SELECT 'Avaliações', COUNT(*) FROM tbl_avaliacao
+UNION ALL
+SELECT 'InfoCash Transações', COUNT(*) FROM tbl_infocash
+UNION ALL
+SELECT 'InfoCash Saldos', COUNT(*) FROM tbl_saldo_infocash;
