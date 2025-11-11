@@ -27,6 +27,20 @@
  **********************************************************************************************************************/
 
 require('dotenv').config(); // Carrega variáveis do .env
+
+const { PrismaClient } = require("@prisma/client");
+const prisma = new PrismaClient();
+
+(async () => {
+  try {
+    // apenas para testar a conexão
+    await prisma.$connect();
+    console.log("Conectado ao banco com sucesso.");
+  } catch (e) {
+    console.error("Erro ao conectar ao banco:", e);
+  }
+})();
+
 const express   = require('express')
 const cors      = require('cors')
 const app       = express()
