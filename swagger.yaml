@@ -102,6 +102,8 @@ tags:
     description: Login e autenticação JWT
   - name: 🔑 Recuperação de Senha
     description: Reset de senhas por email
+  - name: 💰 InfoCash
+    description: Sistema de pontos e recompensas
 
 components:
   schemas:
@@ -1179,6 +1181,270 @@ components:
           type: string
           description: Tempo de processamento da resposta
           example: "real-time"
+
+    # ===============================
+    # SCHEMAS DO INFOCASH
+    # ===============================
+
+    # TRANSAÇÃO INFOCASH
+    TransacaoInfoCash:
+      type: object
+      properties:
+        id_transacao:
+          type: integer
+          example: 1
+        id_usuario:
+          type: integer
+          example: 1
+        tipo_acao:
+          type: string
+          enum: ["avaliacao_promocao", "avaliacao_empresa", "cadastro_produto", "manual"]
+          example: "avaliacao_promocao"
+        pontos:
+          type: integer
+          example: 15
+        descricao:
+          type: string
+          example: "Pontos ganhos por avaliar produto em promoção"
+        data_transacao:
+          type: string
+          format: date-time
+          example: "2023-11-11T10:30:00.000Z"
+        referencia_id:
+          type: integer
+          nullable: true
+          example: 123
+
+    # SALDO INFOCASH
+    SaldoInfoCash:
+      type: object
+      properties:
+        id_usuario:
+          type: integer
+          example: 1
+        saldo_total:
+          type: integer
+          example: 45
+        ultima_atualizacao:
+          type: string
+          format: date-time
+          example: "2023-11-11T10:30:00.000Z"
+
+    # RESUMO POR TIPO DE AÇÃO
+    ResumoAcaoInfoCash:
+      type: object
+      properties:
+        tipo_acao:
+          type: string
+          example: "avaliacao_promocao"
+        total_transacoes:
+          type: integer
+          example: 2
+        total_pontos:
+          type: integer
+          example: 30
+
+    # RANKING DE USUÁRIOS
+    RankingInfoCash:
+      type: object
+      properties:
+        posicao:
+          type: integer
+          example: 1
+        id_usuario:
+          type: integer
+          example: 5
+        nome_usuario:
+          type: string
+          example: "Maria Silva"
+        email_usuario:
+          type: string
+          example: "maria@email.com"
+        saldo_total:
+          type: integer
+          example: 125
+
+    # ESTATÍSTICAS GERAIS
+    EstatisticasInfoCash:
+      type: object
+      properties:
+        total_usuarios_ativos:
+          type: integer
+          example: 50
+        total_pontos_distribuidos:
+          type: integer
+          example: 2350
+        total_transacoes:
+          type: integer
+          example: 156
+        media_pontos_usuario:
+          type: number
+          format: double
+          example: 47.0
+        transacoes_por_tipo:
+          type: array
+          items:
+            type: object
+            properties:
+              tipo_acao:
+                type: string
+                example: "avaliacao_promocao"
+              count:
+                type: integer
+                example: 78
+
+    # PERFIL COMPLETO INFOCASH
+    PerfilInfoCash:
+      type: object
+      properties:
+        saldo:
+          $ref: '#/components/schemas/SaldoInfoCash'
+        resumo:
+          type: array
+          items:
+            $ref: '#/components/schemas/ResumoAcaoInfoCash'
+
+    # REQUESTS DO INFOCASH
+    ConcederPontosRequest:
+      type: object
+      required:
+        - id_usuario
+        - tipo_acao
+        - pontos
+        - descricao
+      properties:
+        id_usuario:
+          type: integer
+          description: ID do usuário que receberá os pontos
+          example: 1
+        tipo_acao:
+          type: string
+          description: Tipo da ação que gerou os pontos
+          enum: ["avaliacao_promocao", "avaliacao_empresa", "cadastro_produto", "manual"]
+          example: "manual"
+        pontos:
+          type: integer
+          minimum: 1
+          description: Quantidade de pontos a conceder
+          example: 20
+        descricao:
+          type: string
+          description: Descrição da concessão de pontos
+          example: "Pontos de bônus por atividade especial"
+        referencia_id:
+          type: integer
+          nullable: true
+          description: ID de referência da ação (opcional)
+          example: 456
+
+    # RESPONSES DO INFOCASH
+    SaldoInfoCashResponse:
+      type: object
+      properties:
+        status:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: "Saldo InfoCash consultado com sucesso"
+        data:
+          $ref: '#/components/schemas/SaldoInfoCash'
+
+    HistoricoInfoCashResponse:
+      type: object
+      properties:
+        status:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: "Histórico InfoCash consultado com sucesso"
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/TransacaoInfoCash'
+
+    ResumoInfoCashResponse:
+      type: object
+      properties:
+        status:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: "Resumo InfoCash consultado com sucesso"
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/ResumoAcaoInfoCash'
+
+    PerfilInfoCashResponse:
+      type: object
+      properties:
+        status:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: "Perfil InfoCash consultado com sucesso"
+        data:
+          $ref: '#/components/schemas/PerfilInfoCash'
+
+    RankingInfoCashResponse:
+      type: object
+      properties:
+        status:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: "Ranking InfoCash consultado com sucesso"
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/RankingInfoCash'
+
+    EstatisticasInfoCashResponse:
+      type: object
+      properties:
+        status:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: "Estatísticas InfoCash consultadas com sucesso"
+        data:
+          $ref: '#/components/schemas/EstatisticasInfoCash'
+
+    TransacoesPeriodoInfoCashResponse:
+      type: object
+      properties:
+        status:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: "Transações por período consultadas com sucesso"
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/TransacaoInfoCash'
+
+    ConcederPontosResponse:
+      type: object
+      properties:
+        status:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: "Pontos concedidos com sucesso"
+        data:
+          type: object
+          properties:
+            id_transacao:
+              type: integer
+              example: 123
 
   responses:
     BadRequest:
@@ -3095,4 +3361,494 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ChatResponse'
+
+  # ===============================
+  # ENDPOINTS DO INFOCASH
+  # ===============================
+
+  /infocash/saldo/{id}:
+    get:
+      tags:
+        - 💰 InfoCash
+      summary: Consultar saldo atual do usuário
+      description: |
+        Retorna o saldo atual de pontos InfoCash de um usuário específico.
+        
+        **Funcionalidade:**
+        - Consulta o saldo total atual
+        - Mostra data da última atualização
+        - Usado para dashboard do usuário
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID do usuário
+          example: 1
+      responses:
+        '200':
+          description: Saldo consultado com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SaldoInfoCashResponse'
+              example:
+                status: true
+                message: "Saldo InfoCash consultado com sucesso"
+                data:
+                  id_usuario: 1
+                  saldo_total: 45
+                  ultima_atualizacao: "2023-11-11T10:30:00.000Z"
+        '400':
+          description: ID do usuário não fornecido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Usuário não encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /infocash/historico/{id}:
+    get:
+      tags:
+        - 💰 InfoCash
+      summary: Consultar histórico de transações
+      description: |
+        Retorna o histórico completo de transações InfoCash de um usuário.
+        
+        **Funcionalidade:**
+        - Lista todas as transações do usuário
+        - Suporte a limite de resultados
+        - Ordenado por data (mais recente primeiro)
+        - Inclui detalhes da ação que gerou os pontos
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID do usuário
+          example: 1
+        - name: limite
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 50
+            minimum: 1
+            maximum: 1000
+          description: Número máximo de transações a retornar
+          example: 50
+      responses:
+        '200':
+          description: Histórico consultado com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HistoricoInfoCashResponse'
+              example:
+                status: true
+                message: "Histórico InfoCash consultado com sucesso"
+                data:
+                  - id_transacao: 1
+                    id_usuario: 1
+                    tipo_acao: "avaliacao_promocao"
+                    pontos: 15
+                    descricao: "Pontos ganhos por avaliar produto em promoção"
+                    data_transacao: "2023-11-11T09:15:00.000Z"
+                    referencia_id: 123
+                  - id_transacao: 2
+                    id_usuario: 1
+                    tipo_acao: "avaliacao_empresa"
+                    pontos: 10
+                    descricao: "Pontos ganhos por avaliar estabelecimento"
+                    data_transacao: "2023-11-10T14:30:00.000Z"
+                    referencia_id: 456
+        '400':
+          description: ID do usuário não fornecido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Usuário não encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /infocash/resumo/{id}:
+    get:
+      tags:
+        - 💰 InfoCash
+      summary: Consultar resumo por tipo de ação
+      description: |
+        Retorna estatísticas agrupadas por tipo de ação do usuário.
+        
+        **Funcionalidade:**
+        - Agrupa pontos por tipo de ação
+        - Total de transações por tipo
+        - Total de pontos por tipo
+        - Útil para dashboards e relatórios
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID do usuário
+          example: 1
+      responses:
+        '200':
+          description: Resumo consultado com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResumoInfoCashResponse'
+              example:
+                status: true
+                message: "Resumo InfoCash consultado com sucesso"
+                data:
+                  - tipo_acao: "avaliacao_promocao"
+                    total_transacoes: 2
+                    total_pontos: 30
+                  - tipo_acao: "avaliacao_empresa"
+                    total_transacoes: 1
+                    total_pontos: 10
+                  - tipo_acao: "cadastro_produto"
+                    total_transacoes: 1
+                    total_pontos: 5
+        '400':
+          description: ID do usuário não fornecido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Usuário não encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /infocash/perfil/{id}:
+    get:
+      tags:
+        - 💰 InfoCash
+      summary: Consultar perfil completo do usuário
+      description: |
+        Retorna saldo atual e resumo em uma única consulta otimizada.
+        
+        **Funcionalidade:**
+        - Combina saldo + resumo em uma resposta
+        - Otimizado para dashboards
+        - Reduz número de chamadas da API
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID do usuário
+          example: 1
+      responses:
+        '200':
+          description: Perfil consultado com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PerfilInfoCashResponse'
+              example:
+                status: true
+                message: "Perfil InfoCash consultado com sucesso"
+                data:
+                  saldo:
+                    id_usuario: 1
+                    saldo_total: 45
+                    ultima_atualizacao: "2023-11-11T10:30:00.000Z"
+                  resumo:
+                    - tipo_acao: "avaliacao_promocao"
+                      total_transacoes: 2
+                      total_pontos: 30
+                    - tipo_acao: "avaliacao_empresa"
+                      total_transacoes: 1
+                      total_pontos: 10
+        '400':
+          description: ID do usuário não fornecido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Usuário não encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /infocash/ranking:
+    get:
+      tags:
+        - 💰 InfoCash
+      summary: Consultar ranking de usuários
+      description: |
+        Retorna ranking dos usuários com mais pontos InfoCash.
+        
+        **Funcionalidade:**
+        - Lista usuários ordenados por saldo
+        - Suporte a limite de resultados
+        - Inclui nome e email dos usuários
+        - Usado para gamificação e competições
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: limite
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 10
+            minimum: 1
+            maximum: 100
+          description: Número máximo de usuários no ranking
+          example: 10
+      responses:
+        '200':
+          description: Ranking consultado com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RankingInfoCashResponse'
+              example:
+                status: true
+                message: "Ranking InfoCash consultado com sucesso"
+                data:
+                  - posicao: 1
+                    id_usuario: 5
+                    nome_usuario: "Maria Silva"
+                    email_usuario: "maria@email.com"
+                    saldo_total: 125
+                  - posicao: 2
+                    id_usuario: 3
+                    nome_usuario: "João Santos"
+                    email_usuario: "joao@email.com"
+                    saldo_total: 98
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /infocash/estatisticas:
+    get:
+      tags:
+        - 💰 InfoCash
+      summary: Consultar estatísticas gerais (Admin)
+      description: |
+        Retorna estatísticas gerais do sistema InfoCash para administradores.
+        
+        **Funcionalidade:**
+        - Total de usuários ativos
+        - Total de pontos distribuídos
+        - Total de transações
+        - Média de pontos por usuário
+        - Distribuição por tipo de ação
+        - **Requer permissão de administrador**
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Estatísticas consultadas com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EstatisticasInfoCashResponse'
+              example:
+                status: true
+                message: "Estatísticas InfoCash consultadas com sucesso"
+                data:
+                  total_usuarios_ativos: 50
+                  total_pontos_distribuidos: 2350
+                  total_transacoes: 156
+                  media_pontos_usuario: 47.0
+                  transacoes_por_tipo:
+                    - tipo_acao: "avaliacao_promocao"
+                      count: 78
+                    - tipo_acao: "avaliacao_empresa"
+                      count: 45
+                    - tipo_acao: "cadastro_produto"
+                      count: 33
+        '401':
+          description: Token inválido ou ausente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Permissão negada (requer admin)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /infocash/periodo/{id}:
+    get:
+      tags:
+        - 💰 InfoCash
+      summary: Consultar transações por período
+      description: |
+        Retorna transações InfoCash de um usuário filtradas por período específico.
+        
+        **Funcionalidade:**
+        - Filtra por data de início e fim
+        - Útil para relatórios mensais/anuais
+        - Análise de atividade por período
+        - Histórico detalhado customizável
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID do usuário
+          example: 1
+        - name: dataInicio
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+          description: Data de início do período (YYYY-MM-DD)
+          example: "2023-01-01"
+        - name: dataFim
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+          description: Data de fim do período (YYYY-MM-DD)
+          example: "2023-12-31"
+      responses:
+        '200':
+          description: Transações por período consultadas com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransacoesPeriodoInfoCashResponse'
+              example:
+                status: true
+                message: "Transações por período consultadas com sucesso"
+                data:
+                  - id_transacao: 15
+                    id_usuario: 1
+                    tipo_acao: "avaliacao_promocao"
+                    pontos: 15
+                    descricao: "Pontos ganhos por avaliar produto em promoção"
+                    data_transacao: "2023-11-05T09:15:00.000Z"
+                    referencia_id: 789
+        '400':
+          description: Parâmetros obrigatórios não fornecidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                status: false
+                status_code: 400
+                message: "Data de início e fim são obrigatórias"
+        '404':
+          description: Usuário não encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /infocash/conceder:
+    post:
+      tags:
+        - 💰 InfoCash
+      summary: Conceder pontos manualmente (Admin)
+      description: |
+        Permite que administradores concedam pontos InfoCash manualmente.
+        
+        **Funcionalidade:**
+        - Concessão manual de pontos
+        - Registro de justificativa
+        - **Requer permissão de administrador**
+        - Usado para casos especiais, bônus, etc.
+        - Auditoria completa das concessões
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConcederPontosRequest'
+            example:
+              id_usuario: 1
+              tipo_acao: "manual"
+              pontos: 20
+              descricao: "Pontos de bônus por atividade especial"
+              referencia_id: 456
+      responses:
+        '201':
+          description: Pontos concedidos com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConcederPontosResponse'
+              example:
+                status: true
+                message: "Pontos concedidos com sucesso"
+                data:
+                  id_transacao: 123
+        '400':
+          description: Dados inválidos ou campos obrigatórios não fornecidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                status: false
+                status_code: 400
+                message: "Campos obrigatórios: id_usuario, tipo_acao, pontos, descricao"
+        '401':
+          description: Token inválido ou ausente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Permissão negada (requer admin)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          $ref: '#/components/responses/InternalError'
 
