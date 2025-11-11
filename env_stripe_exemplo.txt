@@ -1,0 +1,50 @@
+# ==================================
+# STRIPE BRASIL - CONFIGURAÇÕES
+# ==================================
+
+# CHAVES DE TESTE (substitua pelas suas chaves reais)
+STRIPE_SECRET_KEY=sk_test_51XXXXXX_COLOQUE_SUA_CHAVE_AQUI
+STRIPE_PUBLISHABLE_KEY=pk_test_51XXXXXX_COLOQUE_SUA_CHAVE_AQUI
+
+# CHAVES DE PRODUÇÃO (quando for para produção)
+# STRIPE_SECRET_KEY=sk_live_51XXXXXX_SUA_CHAVE_DE_PRODUCAO
+# STRIPE_PUBLISHABLE_KEY=pk_live_51XXXXXX_SUA_CHAVE_PUBLICA_DE_PRODUCAO
+
+# ==================================
+# CONFIGURAÇÕES GERAIS
+# ==================================
+
+# Ambiente
+NODE_ENV=development
+
+# URLs
+BASE_URL=http://localhost:8080
+FRONTEND_URL=http://localhost:3000
+
+# ==================================
+# BANCO DE DADOS (suas configs atuais)
+# ==================================
+
+DATABASE_URL="mysql://usuario:senha@localhost:3306/dbinfohub"
+
+# ==================================
+# JWT (suas configs atuais)
+# ==================================
+
+JWT_SECRET=sua_chave_jwt_secreta_aqui
+
+# ==================================
+# COMO OBTER AS CHAVES STRIPE:
+# ==================================
+# 1. Acesse: https://dashboard.stripe.com/register
+# 2. Crie sua conta (gratuito)
+# 3. Vá para: Developers > API Keys
+# 4. Copie as chaves de teste (começam com sk_test_ e pk_test_)
+# 5. Substitua acima pelos valores reais
+# 6. Para produção, use as chaves live (sk_live_ e pk_live_)
+
+# ==================================
+# WEBHOOK STRIPE (para produção)
+# ==================================
+# STRIPE_WEBHOOK_SECRET=whsec_XXXXXX
+# (Configure no dashboard Stripe para receber notificações automáticas)

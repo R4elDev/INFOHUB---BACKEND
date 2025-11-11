@@ -12,3 +12,390 @@ datasource db {
   provider = "mysql"
   url      = env("DATABASE_URL")
 }
+
+// =============================================
+// MODELOS DO INFOHUB - SISTEMA COMPLETO
+// =============================================
+
+model Usuario {
+  id_usuario       Int      @id @default(autoincrement())
+  nome             String   @db.VarChar(100)
+  email            String   @unique @db.VarChar(100)
+  senha_hash       String   @db.VarChar(255)
+  perfil           PerfilUsuario @default(consumidor)
+  cpf              String?  @unique @db.VarChar(14)
+  cnpj             String?  @unique @db.VarChar(18)
+  telefone         String?  @unique @db.VarChar(20)
+  data_nascimento  DateTime? @db.Date
+  data_criacao     DateTime @default(now()) @db.Timestamp(0)
+
+  // Relacionamentos
+  enderecos        EnderecoUsuario[]
+  posts            Post[]
+  comentarios      Comentario[]
+  curtidas         Curtida[]
+  compartilhamentos Compartilhamento[]
+  favoritos        Favorito[]
+  notificacoes     Notificacao[]
+  recomendacoes    Recomendacao[]
+  listasCompra     ListaCompra[]
+  recuperacoes     RecuperacaoSenha[]
+  carrinho         CarrinhoItem[]
+  compras          Compra[]
+  avaliacoes       Avaliacao[]
+
+  @@map("tbl_usuario")
+}
+
+model EnderecoUsuario {
+  id_endereco    Int      @id @default(autoincrement())
+  id_usuario     Int
+  cep            String   @db.VarChar(9)
+  logradouro     String?  @db.VarChar(100)
+  numero         String?  @db.VarChar(10)
+  complemento    String?  @db.VarChar(50)
+  bairro         String?  @db.VarChar(60)
+  cidade         String?  @db.VarChar(60)
+  estado         String?  @db.Char(2)
+  latitude       Decimal? @db.Decimal(10, 8)
+  longitude      Decimal? @db.Decimal(11, 8)
+
+  // Relacionamentos
+  usuario        Usuario  @relation(fields: [id_usuario], references: [id_usuario])
+
+  @@map("tbl_enderecoUsuario")
+}
+
+model Estabelecimento {
+  id_estabelecimento Int      @id @default(autoincrement())
+  nome               String   @db.VarChar(120)
+  cnpj               String   @unique @db.VarChar(18)
+  telefone           String?  @db.VarChar(20)
+  data_cadastro      DateTime @default(now()) @db.Timestamp(0)
+
+  // Relacionamentos
+  enderecos          EnderecoEstabelecimento[]
+  precos             PrecoProduto[]
+  promocoes          Promocao[]
+  compras            Compra[]
+  avaliacoes         Avaliacao[]
+
+  @@map("tbl_estabelecimento")
+}
+
+model EnderecoEstabelecimento {
+  id_endereco        Int            @id @default(autoincrement())
+  id_estabelecimento Int
+  cep                String         @db.VarChar(9)
+  logradouro         String?        @db.VarChar(100)
+  numero             String?        @db.VarChar(10)
+  complemento        String?        @db.VarChar(50)
+  bairro             String?        @db.VarChar(60)
+  cidade             String?        @db.VarChar(60)
+  estado             String?        @db.Char(2)
+  latitude           Decimal?       @db.Decimal(10, 8)
+  longitude          Decimal?       @db.Decimal(11, 8)
+
+  // Relacionamentos
+  estabelecimento    Estabelecimento @relation(fields: [id_estabelecimento], references: [id_estabelecimento])
+
+  @@map("tbl_enderecoEstabelecimento")
+}
+
+model Categoria {
+  id_categoria Int      @id @default(autoincrement())
+  nome         String   @db.VarChar(100)
+
+  // Relacionamentos
+  produtos     Produto[]
+
+  @@map("tbl_categoria")
+}
+
+model Produto {
+  id_produto   Int      @id @default(autoincrement())
+  nome         String   @db.VarChar(120)
+  descricao    String?  @db.Text
+  id_categoria Int?
+
+  // Relacionamentos
+  categoria        Categoria?     @relation(fields: [id_categoria], references: [id_categoria])
+  precos           PrecoProduto[]
+  promocoes        Promocao[]
+  favoritos        Favorito[]
+  recomendacoes    Recomendacao[]
+  itensLista       ItemLista[]
+  itensCarrinho    CarrinhoItem[]
+  itensCompra      ItemCompra[]
+  avaliacoes       Avaliacao[]
+
+  @@map("tbl_produto")
+}
+
+model PrecoProduto {
+  id_preco           Int            @id @default(autoincrement())
+  id_produto         Int
+  id_estabelecimento Int
+  preco              Decimal        @db.Decimal(10, 2)
+  data_registro      DateTime       @default(now()) @db.Timestamp(0)
+
+  // Relacionamentos
+  produto            Produto        @relation(fields: [id_produto], references: [id_produto])
+  estabelecimento    Estabelecimento @relation(fields: [id_estabelecimento], references: [id_estabelecimento])
+
+  @@map("tbl_precoProduto")
+}
+
+model Promocao {
+  id_promocao        Int            @id @default(autoincrement())
+  id_produto         Int
+  id_estabelecimento Int
+  preco_promocional  Decimal        @db.Decimal(10, 2)
+  data_inicio        DateTime       @db.Date
+  data_fim           DateTime       @db.Date
+
+  // Relacionamentos
+  produto            Produto        @relation(fields: [id_produto], references: [id_produto])
+  estabelecimento    Estabelecimento @relation(fields: [id_estabelecimento], references: [id_estabelecimento])
+
+  @@map("tbl_promocao")
+}
+
+model Post {
+  id_post      Int      @id @default(autoincrement())
+  id_usuario   Int
+  titulo       String?  @db.VarChar(150)
+  conteudo     String?  @db.Text
+  imagem       String?  @db.VarChar(255)
+  data_criacao DateTime @default(now()) @db.Timestamp(0)
+
+  // Relacionamentos
+  usuario          Usuario        @relation(fields: [id_usuario], references: [id_usuario])
+  comentarios      Comentario[]
+  curtidas         Curtida[]
+  compartilhamentos Compartilhamento[]
+
+  @@map("tbl_post")
+}
+
+model Comentario {
+  id_comentario Int      @id @default(autoincrement())
+  id_post       Int
+  id_usuario    Int
+  conteudo      String   @db.Text
+  data_criacao  DateTime @default(now()) @db.Timestamp(0)
+
+  // Relacionamentos
+  post          Post     @relation(fields: [id_post], references: [id_post])
+  usuario       Usuario  @relation(fields: [id_usuario], references: [id_usuario])
+
+  @@map("tbl_comentario")
+}
+
+model Curtida {
+  id_curtida   Int      @id @default(autoincrement())
+  id_post      Int
+  id_usuario   Int
+  data_curtida DateTime @default(now()) @db.Timestamp(0)
+
+  // Relacionamentos
+  post         Post     @relation(fields: [id_post], references: [id_post])
+  usuario      Usuario  @relation(fields: [id_usuario], references: [id_usuario])
+
+  @@map("tbl_curtida")
+}
+
+model Compartilhamento {
+  id_compartilhamento   Int      @id @default(autoincrement())
+  id_post               Int
+  id_usuario            Int
+  data_compartilhamento DateTime @default(now()) @db.Timestamp(0)
+
+  // Relacionamentos
+  post                  Post     @relation(fields: [id_post], references: [id_post])
+  usuario               Usuario  @relation(fields: [id_usuario], references: [id_usuario])
+
+  @@map("tbl_compartilhamento")
+}
+
+model Favorito {
+  id_favorito     Int      @id @default(autoincrement())
+  id_usuario      Int
+  id_produto      Int
+  data_adicionado DateTime @default(now()) @db.Timestamp(0)
+
+  // Relacionamentos
+  usuario         Usuario  @relation(fields: [id_usuario], references: [id_usuario])
+  produto         Produto  @relation(fields: [id_produto], references: [id_produto])
+
+  @@map("tbl_favorito")
+}
+
+model Notificacao {
+  id_notificacao Int           @id @default(autoincrement())
+  id_usuario     Int
+  mensagem       String        @db.VarChar(255)
+  tipo           TipoNotificacao
+  lida           Boolean       @default(false)
+  data_envio     DateTime      @default(now()) @db.Timestamp(0)
+
+  // Relacionamentos
+  usuario        Usuario       @relation(fields: [id_usuario], references: [id_usuario])
+
+  @@map("tbl_notificacao")
+}
+
+model Recomendacao {
+  id_recomendacao Int      @id @default(autoincrement())
+  id_usuario      Int
+  id_produto      Int
+  motivo          String?  @db.VarChar(255)
+  data            DateTime @default(now()) @db.Timestamp(0)
+
+  // Relacionamentos
+  usuario         Usuario  @relation(fields: [id_usuario], references: [id_usuario])
+  produto         Produto  @relation(fields: [id_produto], references: [id_produto])
+
+  @@map("tbl_recomendacao")
+}
+
+model ListaCompra {
+  id_lista     Int      @id @default(autoincrement())
+  id_usuario   Int
+  nome_lista   String?  @db.VarChar(100)
+  data_criacao DateTime @default(now()) @db.Timestamp(0)
+
+  // Relacionamentos
+  usuario      Usuario    @relation(fields: [id_usuario], references: [id_usuario])
+  itens        ItemLista[]
+
+  @@map("tbl_listaCompra")
+}
+
+model ItemLista {
+  id_item    Int @id @default(autoincrement())
+  id_lista   Int
+  id_produto Int
+  quantidade Int @default(1)
+
+  // Relacionamentos
+  lista      ListaCompra @relation(fields: [id_lista], references: [id_lista])
+  produto    Produto     @relation(fields: [id_produto], references: [id_produto])
+
+  @@map("tbl_itemLista")
+}
+
+model RecuperacaoSenha {
+  id           Int      @id @default(autoincrement())
+  id_usuario   Int
+  codigo       String   @db.VarChar(6)
+  expiracao    DateTime @db.Timestamp(0)
+  usado        Boolean  @default(false)
+  data_criacao DateTime @default(now()) @db.Timestamp(0)
+
+  // Relacionamentos
+  usuario      Usuario  @relation(fields: [id_usuario], references: [id_usuario])
+
+  @@map("tbl_recuperacaoSenha")
+}
+
+// =============================================
+// NOVAS TABELAS - CARRINHO E COMPRAS
+// =============================================
+
+model CarrinhoItem {
+  id_carrinho    Int      @id @default(autoincrement())
+  id_usuario     Int
+  id_produto     Int
+  quantidade     Int      @default(1)
+  data_adicionado DateTime @default(now()) @db.Timestamp(0)
+
+  // Relacionamentos
+  usuario        Usuario  @relation(fields: [id_usuario], references: [id_usuario])
+  produto        Produto  @relation(fields: [id_produto], references: [id_produto])
+
+  @@map("tbl_carrinho")
+}
+
+model Compra {
+  id_compra          Int            @id @default(autoincrement())
+  id_usuario         Int
+  id_estabelecimento Int
+  valor_total        Decimal        @db.Decimal(10, 2)
+  status_compra      StatusCompra   @default(pendente)
+  metodo_pagamento   String?        @db.VarChar(50)
+  data_compra        DateTime       @default(now()) @db.Timestamp(0)
+  data_entrega       DateTime?      @db.Timestamp(0)
+
+  // Relacionamentos
+  usuario            Usuario        @relation(fields: [id_usuario], references: [id_usuario])
+  estabelecimento    Estabelecimento @relation(fields: [id_estabelecimento], references: [id_estabelecimento])
+  itens              ItemCompra[]
+
+  @@map("tbl_compra")
+}
+
+model ItemCompra {
+  id_item_compra Int     @id @default(autoincrement())
+  id_compra      Int
+  id_produto     Int
+  quantidade     Int
+  preco_unitario Decimal @db.Decimal(10, 2)
+  subtotal       Decimal @db.Decimal(10, 2)
+
+  // Relacionamentos
+  compra         Compra  @relation(fields: [id_compra], references: [id_compra])
+  produto        Produto @relation(fields: [id_produto], references: [id_produto])
+
+  @@map("tbl_itemCompra")
+}
+
+model Avaliacao {
+  id_avaliacao       Int            @id @default(autoincrement())
+  id_usuario         Int
+  id_produto         Int?
+  id_estabelecimento Int?
+  nota               Int            // 1 a 5
+  comentario         String?        @db.Text
+  data_avaliacao     DateTime       @default(now()) @db.Timestamp(0)
+
+  // Relacionamentos
+  usuario            Usuario        @relation(fields: [id_usuario], references: [id_usuario])
+  produto            Produto?       @relation(fields: [id_produto], references: [id_produto])
+  estabelecimento    Estabelecimento? @relation(fields: [id_estabelecimento], references: [id_estabelecimento])
+
+  @@map("tbl_avaliacao")
+}
+
+// =============================================
+// ENUMS
+// =============================================
+
+enum PerfilUsuario {
+  consumidor
+  admin
+  estabelecimento
+
+  @@map("perfil_usuario")
+}
+
+enum TipoNotificacao {
+  promocao
+  alerta
+  social
+  compra
+  carrinho
+
+  @@map("tipo_notificacao")
+}
+
+enum StatusCompra {
+  pendente
+  confirmada
+  processando
+  enviada
+  entregue
+  cancelada
+
+  @@map("status_compra")
+}

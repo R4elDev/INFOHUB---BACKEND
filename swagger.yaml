@@ -1,26 +1,64 @@
 openapi: 3.0.3
 info:
-  title: InfoHub API - Sistema Completo
+  title: InfoHub API - Plataforma E-commerce Completa
   description: |
-    API completa do InfoHub para gerenciamento de usuários, produtos, categorias e sistema de recuperação de senhas.
+    API completa do InfoHub - Plataforma de E-commerce com IA, Rede Social e Sistema de Promoções.
     
-    ## Arquitetura
-    - **API Principal**: Node.js/Express (porta 8080)
+    ## 🚀 Funcionalidades Principais
+    
+    ### 📦 **E-commerce Completo**
+    - **Produtos**: Cadastro, busca, categorização
+    - **Carrinho**: Adicionar, remover, finalizar compra
+    - **Pedidos**: Histórico, rastreamento, status
+    - **Pagamentos**: Integração Stripe, PIX, cartões
+    
+    ### 💰 **Sistema de Promoções**
+    - **Promoções Ativas**: Lista de ofertas em tempo real
+    - **Melhores Ofertas**: Ranking por desconto
+    - **Alertas**: Notificações para produtos favoritados
+    
+    ### 🤖 **Inteligência Artificial**
+    - **Chat IA**: Busca inteligente de promoções
+    - **Recomendações**: Produtos personalizados
+    - **Análise**: Comportamento de compra
+    
+    ### 🌐 **Rede Social**
+    - **Posts**: Compartilhar produtos e experiências
+    - **Comentários**: Interação entre usuários
+    - **Curtidas**: Sistema de engagement
+    - **Feed**: Timeline personalizada
+    
+    ### ⭐ **Avaliações e Favoritos**
+    - **Avaliações**: Sistema de notas e comentários
+    - **Favoritos**: Lista de produtos desejados
+    - **Ranking**: Produtos mais bem avaliados
+    
+    ## 🏗️ Arquitetura
+    - **Backend**: Node.js/Express (porta 8080)
     - **Banco**: MySQL com Prisma ORM
+    - **IA**: Groq API para processamento
+    - **Pagamentos**: Stripe API
+    - **Email**: Nodemailer
     
-    ## Autenticação
+    ## 🔐 Autenticação
     Rotas protegidas requerem JWT token no header:
     ```
     Authorization: Bearer <token>
     ```
     
-    ## Serviços
-    1. **Usuários**: Cadastro, login, CRUD
-    2. **Produtos**: Gerenciamento completo de produtos
-    3. **Categorias**: Gerenciamento de categorias de produtos
-    4. **Recuperação de Senha**: Solicitação, validação, redefinição
+    ## 📋 Módulos Disponíveis
+    1. **👥 Usuários**: Cadastro, login, perfil
+    2. **🏪 Estabelecimentos**: Lojas e vendedores
+    3. **📦 Produtos**: Catálogo completo
+    4. **🛒 E-commerce**: Carrinho, pedidos, pagamentos
+    5. **💰 Promoções**: Ofertas e descontos
+    6. **🌐 Rede Social**: Posts, comentários, curtidas
+    7. **⭐ Avaliações**: Notas e reviews
+    8. **❤️ Favoritos**: Lista de desejos
+    9. **🤖 IA**: Chat inteligente
+    10. **🔑 Recuperação**: Reset de senhas
     
-  version: 1.0.0
+  version: 2.0.0
   contact:
     name: InfoHub Team
     email: support@infohub.com
@@ -32,22 +70,38 @@ servers:
     description: API Principal (Node.js)
 
 tags:
-  - name: Usuários
-    description: Gerenciamento de usuários
-  - name: Estabelecimentos
-    description: Gerenciamento de estabelecimentos
-  - name: Endereços de Usuário
-    description: Gerenciamento de endereços de usuários
-  - name: Produtos
-    description: Gerenciamento de produtos
-  - name: Categorias
-    description: Gerenciamento de categorias
-  - name: Autenticação
-    description: Login e autenticação
-  - name: Recuperação de Senha
-    description: Sistema de recuperação de senha por email
-  - name: Chat IA
-    description: Interação com IA para busca de promoções
+  - name: 👥 Usuários
+    description: Gerenciamento completo de usuários
+  - name: 🏪 Estabelecimentos
+    description: Gerenciamento de lojas e vendedores
+  - name: 📍 Endereços
+    description: Endereços de usuários e entrega
+  - name: 📦 Produtos
+    description: Catálogo de produtos
+  - name: 🏷️ Categorias
+    description: Organização por categorias
+  - name: 🛒 Carrinho
+    description: Carrinho de compras
+  - name: 📋 Pedidos
+    description: Gestão de pedidos
+  - name: 💳 Pagamentos
+    description: Processamento de pagamentos
+  - name: 💰 Promoções
+    description: Sistema de ofertas e descontos
+  - name: 🌐 Rede Social
+    description: Posts, comentários e interações
+  - name: ⭐ Avaliações
+    description: Sistema de avaliações e reviews
+  - name: ❤️ Favoritos
+    description: Lista de produtos favoritos
+  - name: 📧 Notificações
+    description: Sistema de notificações
+  - name: 🤖 Chat IA
+    description: Assistente virtual inteligente
+  - name: 🔐 Autenticação
+    description: Login e autenticação JWT
+  - name: 🔑 Recuperação de Senha
+    description: Reset de senhas por email
 
 components:
   schemas:
@@ -744,11 +798,418 @@ components:
           type: string
           description: Detalhes do erro
           example: "Campo obrigatório não informado"
+
+    # ===============================
+    # SCHEMAS DE E-COMMERCE
+    # ===============================
+    
+    # CARRINHO
+    CarrinhoItem:
+      type: object
+      properties:
+        id_carrinho:
+          type: integer
+          example: 1
+        id_usuario:
+          type: integer
+          example: 1
+        id_produto:
+          type: integer
+          example: 1
+        id_estabelecimento:
+          type: integer
+          example: 1
+        quantidade:
+          type: integer
+          example: 2
+        data_adicao:
+          type: string
+          format: date-time
+          example: "2025-11-11T10:30:00Z"
+        produto:
+          $ref: '#/components/schemas/Produto'
+        valor_total:
+          type: number
+          format: double
+          example: 19.98
+    
+    AdicionarCarrinhoRequest:
+      type: object
+      required:
+        - id_usuario
+        - id_produto
+        - id_estabelecimento
+        - quantidade
+      properties:
+        id_usuario:
+          type: integer
+          example: 1
+        id_produto:
+          type: integer
+          example: 1
+        id_estabelecimento:
+          type: integer
+          example: 1
+        quantidade:
+          type: integer
+          minimum: 1
+          example: 2
+
+    # PEDIDOS
+    Pedido:
+      type: object
+      properties:
+        id_pedido:
+          type: integer
+          example: 1
+        id_usuario:
+          type: integer
+          example: 1
+        status:
+          type: string
+          enum: ["pendente", "confirmado", "em_preparacao", "enviado", "entregue", "cancelado"]
+          example: "confirmado"
+        valor_total:
+          type: number
+          format: double
+          example: 59.97
+        data_pedido:
+          type: string
+          format: date-time
+          example: "2025-11-11T10:30:00Z"
+        metodo_pagamento:
+          type: string
+          example: "cartao_credito"
+        itens:
+          type: array
+          items:
+            $ref: '#/components/schemas/ItemPedido'
+    
+    CriarPedidoRequest:
+      type: object
+      required:
+        - id_usuario
+        - id_endereco_entrega
+        - metodo_pagamento
+      properties:
+        id_usuario:
+          type: integer
+          example: 1
+        id_endereco_entrega:
+          type: integer
+          example: 1
+        metodo_pagamento:
+          type: string
+          enum: ["cartao_credito", "cartao_debito", "pix", "boleto"]
+          example: "cartao_credito"
+
+    # PROMOÇÕES
+    Promocao:
+      type: object
+      properties:
+        id_promocao:
+          type: integer
+          example: 1
+        id_produto:
+          type: integer
+          example: 1
+        id_estabelecimento:
+          type: integer
+          example: 1
+        tipo_desconto:
+          type: string
+          enum: ["percentual", "valor_fixo"]
+          example: "percentual"
+        valor_desconto:
+          type: number
+          format: double
+          example: 15.00
+        data_inicio:
+          type: string
+          format: date
+          example: "2025-11-10"
+        data_fim:
+          type: string
+          format: date
+          example: "2025-11-20"
+        ativa:
+          type: boolean
+          example: true
+        produto:
+          $ref: '#/components/schemas/Produto'
+        preco_promocional:
+          type: number
+          format: double
+          example: 25.49
+    
+    CriarPromocaoRequest:
+      type: object
+      required:
+        - id_produto
+        - id_estabelecimento
+        - tipo_desconto
+        - valor_desconto
+        - data_inicio
+        - data_fim
+      properties:
+        id_produto:
+          type: integer
+          example: 1
+        id_estabelecimento:
+          type: integer
+          example: 1
+        tipo_desconto:
+          type: string
+          enum: ["percentual", "valor_fixo"]
+          example: "percentual"
+        valor_desconto:
+          type: number
+          format: double
+          example: 15.00
+        data_inicio:
+          type: string
+          format: date
+          example: "2025-11-10"
+        data_fim:
+          type: string
+          format: date
+          example: "2025-11-20"
+
+    # REDE SOCIAL
+    Post:
+      type: object
+      properties:
+        id_post:
+          type: integer
+          example: 1
+        id_usuario:
+          type: integer
+          example: 1
+        conteudo:
+          type: string
+          example: "Adorei este produto! Super recomendo!"
+        id_produto:
+          type: integer
+          nullable: true
+          example: 1
+        curtidas_count:
+          type: integer
+          example: 15
+        comentarios_count:
+          type: integer
+          example: 3
+        data_criacao:
+          type: string
+          format: date-time
+          example: "2025-11-11T10:30:00Z"
+        usuario:
+          type: object
+          properties:
+            nome:
+              type: string
+              example: "João Silva"
+    
+    CriarPostRequest:
+      type: object
+      required:
+        - id_usuario
+        - conteudo
+      properties:
+        id_usuario:
+          type: integer
+          example: 1
+        conteudo:
+          type: string
+          maxLength: 1000
+          example: "Adorei este produto! Super recomendo!"
+        id_produto:
+          type: integer
+          nullable: true
+          example: 1
+
+    # AVALIAÇÕES
+    Avaliacao:
+      type: object
+      properties:
+        id_avaliacao:
+          type: integer
+          example: 1
+        id_usuario:
+          type: integer
+          example: 1
+        id_produto:
+          type: integer
+          example: 1
+        nota:
+          type: integer
+          minimum: 1
+          maximum: 5
+          example: 5
+        comentario:
+          type: string
+          example: "Produto excelente!"
+        data_avaliacao:
+          type: string
+          format: date-time
+          example: "2025-11-11T10:30:00Z"
+    
+    CriarAvaliacaoRequest:
+      type: object
+      required:
+        - id_usuario
+        - nota
+      properties:
+        id_usuario:
+          type: integer
+          example: 1
+        id_produto:
+          type: integer
+          example: 1
+        nota:
+          type: integer
+          minimum: 1
+          maximum: 5
+          example: 5
+        comentario:
+          type: string
+          example: "Produto excelente!"
+
+    # FAVORITOS
+    Favorito:
+      type: object
+      properties:
+        id_favorito:
+          type: integer
+          example: 1
+        id_usuario:
+          type: integer
+          example: 1
+        id_produto:
+          type: integer
+          example: 1
+        data_adicao:
+          type: string
+          format: date-time
+          example: "2025-11-11T10:30:00Z"
+        produto:
+          $ref: '#/components/schemas/Produto'
+    
+    AdicionarFavoritoRequest:
+      type: object
+      required:
+        - id_usuario
+        - id_produto
+        - id_estabelecimento
+      properties:
+        id_usuario:
+          type: integer
+          example: 1
+        id_produto:
+          type: integer
+          example: 1
+        id_estabelecimento:
+          type: integer
+          example: 1
+
+    # CHAT IA ATUALIZADO
+    ChatRequest:
+      type: object
+      required:
+        - mensagem
+        - idUsuario
+      properties:
+        mensagem:
+          type: string
+          description: Mensagem do usuário para a IA
+          example: "quais as promoções de leite?"
+        idUsuario:
+          type: integer
+          description: ID do usuário
+          example: 1
+
+    ChatResponse:
+      type: object
+      properties:
+        status:
+          type: boolean
+          example: true
+        status_code:
+          type: integer
+          example: 200
+        message:
+          type: string
+          example: "Resposta gerada com sucesso"
+        data:
+          type: object
+          properties:
+            reply:
+              type: string
+              example: "🛒 Encontrei 3 promoções de leite perto de você!"
+            confidence:
+              type: number
+              format: float
+              example: 0.95
+            response_time_ms:
+              type: integer
+              example: 150
+
+  responses:
+    BadRequest:
+      description: Requisição inválida
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            status: false
+            status_code: 400
+            message: "Dados inválidos fornecidos"
+    
+    Unauthorized:
+      description: Token de autenticação inválido ou ausente
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            status: false
+            status_code: 401
+            message: "Token inválido ou não fornecido"
+    
+    NotFound:
+      description: Recurso não encontrado
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            status: false
+            status_code: 404
+            message: "Recurso não encontrado"
+    
+    InternalError:
+      description: Erro interno do servidor
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            status: false
+            status_code: 500
+            message: "Erro interno do servidor"
+
   securitySchemes:
     BearerAuth:
       type: http
       scheme: bearer
       bearerFormat: JWT
+      description: |
+        Token JWT obtido através do endpoint /login.
+        
+        Exemplo de uso:
+        ```
+        Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        ```
 
 paths:
   /estabelecimento:
@@ -1745,10 +2206,736 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
                 
+  # ===============================
+  # 🛒 CARRINHO DE COMPRAS
+  # ===============================
+  /carrinho:
+    post:
+      tags:
+        - 🛒 Carrinho
+      summary: Adicionar item ao carrinho
+      description: Adiciona um produto ao carrinho do usuário
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdicionarCarrinhoRequest'
+      responses:
+        '201':
+          description: Item adicionado ao carrinho
+        '400':
+          description: Dados inválidos
+    
+    get:
+      tags:
+        - 🛒 Carrinho
+      summary: Listar itens do carrinho
+      description: Lista todos os itens do carrinho do usuário
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id_usuario
+          in: query
+          required: true
+          schema:
+            type: integer
+          example: 1
+      responses:
+        '200':
+          description: Lista de itens do carrinho
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: true
+                  carrinho:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CarrinhoItem'
+                  valor_total:
+                    type: number
+                    format: double
+                    example: 59.97
+
+  /carrinho/{id}:
+    put:
+      tags:
+        - 🛒 Carrinho
+      summary: Atualizar quantidade no carrinho
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                quantidade:
+                  type: integer
+                  minimum: 1
+                  example: 3
+      responses:
+        '200':
+          description: Quantidade atualizada
+    
+    delete:
+      tags:
+        - 🛒 Carrinho
+      summary: Remover item do carrinho
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Item removido do carrinho
+
+  /carrinho/limpar/{id_usuario}:
+    delete:
+      tags:
+        - 🛒 Carrinho
+      summary: Limpar carrinho
+      description: Remove todos os itens do carrinho do usuário
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id_usuario
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Carrinho limpo com sucesso
+
+  # ===============================
+  # 📋 PEDIDOS
+  # ===============================
+  /pedido:
+    post:
+      tags:
+        - 📋 Pedidos
+      summary: Finalizar compra
+      description: Cria um pedido a partir dos itens do carrinho
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CriarPedidoRequest'
+      responses:
+        '201':
+          description: Pedido criado com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: true
+                  pedido:
+                    $ref: '#/components/schemas/Pedido'
+
+  /pedido/{id}:
+    get:
+      tags:
+        - 📋 Pedidos
+      summary: Buscar pedido por ID
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Dados do pedido
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pedido:
+                    $ref: '#/components/schemas/Pedido'
+
+  /pedidos/usuario/{id_usuario}:
+    get:
+      tags:
+        - 📋 Pedidos
+      summary: Listar pedidos do usuário
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id_usuario
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Lista de pedidos do usuário
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pedidos:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Pedido'
+
+  # ===============================
+  # 💰 PROMOÇÕES
+  # ===============================
+  /promocoes:
+    post:
+      tags:
+        - 💰 Promoções
+      summary: Criar promoção
+      description: Cria uma nova promoção (admin ou estabelecimento)
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CriarPromocaoRequest'
+      responses:
+        '201':
+          description: Promoção criada com sucesso
+    
+    get:
+      tags:
+        - 💰 Promoções
+      summary: Listar promoções ativas
+      description: Lista todas as promoções ativas no sistema
+      responses:
+        '200':
+          description: Lista de promoções ativas
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: true
+                  promocoes:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Promocao'
+
+  /promocoes/melhores:
+    get:
+      tags:
+        - 💰 Promoções
+      summary: Melhores promoções
+      description: Lista as melhores promoções ordenadas por desconto
+      responses:
+        '200':
+          description: Lista das melhores promoções
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  promocoes:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Promocao'
+
+  /promocoes/melhores/{limit}:
+    get:
+      tags:
+        - 💰 Promoções
+      summary: Melhores promoções com limite
+      parameters:
+        - name: limit
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 10
+      responses:
+        '200':
+          description: Lista limitada das melhores promoções
+
+  /promocoes/produto/{id_produto}:
+    get:
+      tags:
+        - 💰 Promoções
+      summary: Promoções de um produto
+      parameters:
+        - name: id_produto
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Lista de promoções do produto
+
+  /promocao/{id_promocao}:
+    get:
+      tags:
+        - 💰 Promoções
+      summary: Buscar promoção por ID
+      parameters:
+        - name: id_promocao
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Dados da promoção
+    
+    put:
+      tags:
+        - 💰 Promoções
+      summary: Atualizar promoção
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id_promocao
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CriarPromocaoRequest'
+      responses:
+        '200':
+          description: Promoção atualizada
+    
+    delete:
+      tags:
+        - 💰 Promoções
+      summary: Deletar promoção
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id_promocao
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Promoção deletada
+
+  # ===============================
+  # 🌐 REDE SOCIAL
+  # ===============================
+  /posts:
+    post:
+      tags:
+        - 🌐 Rede Social
+      summary: Criar post
+      description: Cria um novo post na rede social
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CriarPostRequest'
+      responses:
+        '201':
+          description: Post criado com sucesso
+
+  /posts/feed:
+    get:
+      tags:
+        - 🌐 Rede Social
+      summary: Feed de posts
+      description: Lista posts do feed principal
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Lista de posts do feed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  posts:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Post'
+
+  /posts/feed/{page}/{limit}:
+    get:
+      tags:
+        - 🌐 Rede Social
+      summary: Feed com paginação
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: page
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+        - name: limit
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 10
+      responses:
+        '200':
+          description: Posts paginados
+
+  /posts/usuario/{id_usuario}:
+    get:
+      tags:
+        - 🌐 Rede Social
+      summary: Posts de um usuário
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id_usuario
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Lista de posts do usuário
+
+  /post/{id_post}:
+    get:
+      tags:
+        - 🌐 Rede Social
+      summary: Buscar post por ID
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id_post
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Dados do post
+    
+    put:
+      tags:
+        - 🌐 Rede Social
+      summary: Atualizar post
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id_post
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CriarPostRequest'
+      responses:
+        '200':
+          description: Post atualizado
+    
+    delete:
+      tags:
+        - 🌐 Rede Social
+      summary: Deletar post
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id_post
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Post deletado
+
+  /post/{id_post}/curtir:
+    post:
+      tags:
+        - 🌐 Rede Social
+      summary: Curtir/Descurtir post
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id_post
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id_usuario:
+                  type: integer
+                  example: 1
+      responses:
+        '200':
+          description: Curtida processada
+
+  /post/{id_post}/comentario:
+    post:
+      tags:
+        - 🌐 Rede Social
+      summary: Comentar post
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id_post
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id_usuario:
+                  type: integer
+                  example: 1
+                conteudo:
+                  type: string
+                  example: "Ótimo post!"
+      responses:
+        '201':
+          description: Comentário criado
+
+  /post/{id_post}/comentarios:
+    get:
+      tags:
+        - 🌐 Rede Social
+      summary: Listar comentários
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id_post
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Lista de comentários
+
+  # ===============================
+  # ⭐ AVALIAÇÕES
+  # ===============================
+  /avaliacoes:
+    post:
+      tags:
+        - ⭐ Avaliações
+      summary: Criar avaliação
+      description: Cria uma nova avaliação para produto ou estabelecimento
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CriarAvaliacaoRequest'
+      responses:
+        '201':
+          description: Avaliação criada com sucesso
+
+  /avaliacoes/produto/{id_produto}:
+    get:
+      tags:
+        - ⭐ Avaliações
+      summary: Listar avaliações de produto
+      parameters:
+        - name: id_produto
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Lista de avaliações do produto
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  avaliacoes:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Avaliacao'
+
+  /avaliacoes/produtos/mais-bem-avaliados:
+    get:
+      tags:
+        - ⭐ Avaliações
+      summary: Produtos mais bem avaliados
+      responses:
+        '200':
+          description: Lista de produtos mais bem avaliados
+
+  /avaliacoes/produtos/mais-bem-avaliados/{limit}:
+    get:
+      tags:
+        - ⭐ Avaliações
+      summary: Produtos mais bem avaliados com limite
+      parameters:
+        - name: limit
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Lista limitada de produtos mais bem avaliados
+
+  # ===============================
+  # ❤️ FAVORITOS
+  # ===============================
+  /favoritos:
+    post:
+      tags:
+        - ❤️ Favoritos
+      summary: Adicionar aos favoritos
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdicionarFavoritoRequest'
+      responses:
+        '201':
+          description: Produto adicionado aos favoritos
+
+  /favoritos/usuario/{id_usuario}:
+    get:
+      tags:
+        - ❤️ Favoritos
+      summary: Listar favoritos do usuário
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id_usuario
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Lista de favoritos do usuário
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  favoritos:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Favorito'
+
+  /favorito/{id}:
+    delete:
+      tags:
+        - ❤️ Favoritos
+      summary: Remover dos favoritos
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Produto removido dos favoritos
+
+  # ===============================
+  # 📧 NOTIFICAÇÕES
+  # ===============================
+  /notificacoes/usuario/{id_usuario}:
+    get:
+      tags:
+        - 📧 Notificações
+      summary: Listar notificações do usuário
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id_usuario
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Lista de notificações
+
+  /notificacao/{id}/marcar-lida:
+    put:
+      tags:
+        - 📧 Notificações
+      summary: Marcar notificação como lida
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Notificação marcada como lida
+
   /respostaOllama:
     post:
       tags:
-        - Chat IA
+        - 🤖 Chat IA
       summary: Resposta Ollama (Legacy)
       description: Endpoint legacy para compatibilidade. Use /interagir para novas implementações.
       servers:

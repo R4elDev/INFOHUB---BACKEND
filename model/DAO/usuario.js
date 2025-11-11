@@ -50,24 +50,57 @@ const insertUsuario = async function (usuario) {
 // ================================ UPDATE =================================
 const updateUsuario = async function (usuario) {
     try {
-        // Define perfil válido ou padrão
-        const perfilValido = ['consumidor', 'admin', 'estabelecimento'];
-        const perfil = perfilValido.includes(usuario.perfil) ? usuario.perfil : 'consumidor';
+        // Construir campos para atualização dinamicamente
+        let camposUpdate = [];
 
-        // Monta a query de forma segura, considerando campos opcionais
+        // Adicionar apenas campos que foram realmente enviados
+        if (usuario.nome !== undefined) {
+            camposUpdate.push(`nome = '${usuario.nome}'`);
+        }
+        
+        if (usuario.email !== undefined) {
+            camposUpdate.push(`email = '${usuario.email}'`);
+        }
+        
+        if (usuario.senha_hash !== undefined) {
+            camposUpdate.push(`senha_hash = '${usuario.senha_hash}'`);
+        }
+        
+        if (usuario.perfil !== undefined) {
+            camposUpdate.push(`perfil = '${usuario.perfil}'`);
+        }
+        
+        if (usuario.cpf !== undefined) {
+            camposUpdate.push(`cpf = ${usuario.cpf ? `'${usuario.cpf}'` : 'NULL'}`);
+        }
+        
+        if (usuario.cnpj !== undefined) {
+            camposUpdate.push(`cnpj = ${usuario.cnpj ? `'${usuario.cnpj}'` : 'NULL'}`);
+        }
+        
+        if (usuario.telefone !== undefined) {
+            camposUpdate.push(`telefone = ${usuario.telefone ? `'${usuario.telefone}'` : 'NULL'}`);
+        }
+        
+        if (usuario.data_nascimento !== undefined) {
+            camposUpdate.push(`data_nascimento = ${usuario.data_nascimento ? `'${usuario.data_nascimento}'` : 'NULL'}`);
+        }
+
+        // Verificar se há campos para atualizar
+        if (camposUpdate.length === 0) {
+            console.log("Nenhum campo para atualizar");
+            return false;
+        }
+
+        // Montar SQL final apenas com campos enviados
         let sql = `
             UPDATE tbl_usuario SET
-                ${usuario.nome ? `nome = '${usuario.nome}',` : ''}
-                ${usuario.email ? `email = '${usuario.email}',` : ''}
-                ${usuario.senha_hash ? `senha_hash = '${usuario.senha_hash}',` : ''}
-                perfil = '${perfil}',
-                cpf = ${usuario.cpf ? `'${usuario.cpf}'` : 'NULL'},
-                cnpj = ${usuario.cnpj ? `'${usuario.cnpj}'` : 'NULL'},
-                telefone = ${usuario.telefone ? `'${usuario.telefone}'` : 'NULL'},
-                data_nascimento = ${usuario.data_nascimento ? `'${usuario.data_nascimento}'` : 'NULL'}
+                ${camposUpdate.join(', ')}
             WHERE id_usuario = ${usuario.id_usuario};
         `;
 
+        console.log("SQL de atualização:", sql);
+        
         let result = await prisma.$executeRawUnsafe(sql);
         return result ? true : false;
     } catch (error) {

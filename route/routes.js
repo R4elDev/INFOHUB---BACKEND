@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const bodyParser = require('body-parser');
 const verificarToken = require('../middleware/verificarToken.js');
+const { verificarAdmin, verificarAdminOuEstabelecimento, verificarProprietarioOuAdmin } = require('../middleware/verificarPermissoes.js');
 
 const bodyParserJson = bodyParser.json();
 
@@ -450,6 +451,786 @@ router.get('/produto/:id', async (request, response) => {
     let id = request.params.id;
 
     let resultado = await controllerProduto.getProdutoById(id);
+
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
+// ==============================
+// Rotas de CARRINHO DE COMPRAS
+// ==============================
+const controllerCarrinho = require('../controller/carrinho/carrinhoController.js');
+
+// Adicionar item ao carrinho (protegido)
+router.post('/carrinho', verificarToken, bodyParserJson, async (request, response) => {
+    let contentType = request.headers['content-type'];
+    let dadosBody = request.body;
+
+    let resultado = await controllerCarrinho.adicionarItemCarrinho(dadosBody, contentType);
+
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
+// Listar carrinho do usuário (próprio usuário ou admin)
+router.get('/carrinho/:id_usuario', verificarProprietarioOuAdmin, async (request, response) => {
+    let id_usuario = request.params.id_usuario;
+
+    let resultado = await controllerCarrinho.listarCarrinhoUsuario(id_usuario);
+
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
+// Atualizar quantidade do item no carrinho (protegido)
+router.put('/carrinho', verificarToken, bodyParserJson, async (request, response) => {
+    let contentType = request.headers['content-type'];
+    let dadosBody = request.body;
+
+    let resultado = await controllerCarrinho.atualizarItemCarrinho(dadosBody, contentType);
+
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
+// Remover item do carrinho (próprio usuário ou admin)
+router.delete('/carrinho/:id_usuario/:id_produto', verificarProprietarioOuAdmin, async (request, response) => {
+    let id_usuario = request.params.id_usuario;
+    let id_produto = request.params.id_produto;
+
+    let resultado = await controllerCarrinho.removerItemCarrinho(id_usuario, id_produto);
+
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
+// Limpar carrinho do usuário (próprio usuário ou admin)
+router.delete('/carrinho/:id_usuario', verificarProprietarioOuAdmin, async (request, response) => {
+    let id_usuario = request.params.id_usuario;
+
+    let resultado = await controllerCarrinho.limparCarrinhoUsuario(id_usuario);
+
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
+// Contar itens no carrinho (próprio usuário ou admin)
+router.get('/carrinho/:id_usuario/count', verificarProprietarioOuAdmin, async (request, response) => {
+    let id_usuario = request.params.id_usuario;
+
+    let resultado = await controllerCarrinho.contarItensCarrinho(id_usuario);
+
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
+// Calcular total do carrinho (próprio usuário ou admin)
+router.get('/carrinho/:id_usuario/total', verificarProprietarioOuAdmin, async (request, response) => {
+    let id_usuario = request.params.id_usuario;
+
+    let resultado = await controllerCarrinho.calcularTotalCarrinho(id_usuario);
+
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
+// ==============================
+// Rotas de COMPRAS
+// ==============================
+const controllerCompra = require('../controller/compra/compraController.js');
+
+// Processar compra do carrinho (protegido)
+router.post('/compra/carrinho', verificarToken, bodyParserJson, async (request, response) => {
+    let contentType = request.headers['content-type'];
+    let dadosBody = request.body;
+
+    let resultado = await controllerCompra.processarCompraCarrinho(dadosBody, contentType);
+
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
+// Criar compra manual (admin)
+router.post('/compra', verificarAdmin, bodyParserJson, async (request, response) => {
+    let contentType = request.headers['content-type'];
+    let dadosBody = request.body;
+
+    let resultado = await controllerCompra.criarCompra(dadosBody, contentType);
+
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
+// Listar compras do usuário (próprio usuário ou admin)
+router.get('/compras/usuario/:id_usuario', verificarProprietarioOuAdmin, async (request, response) => {
+    let id_usuario = request.params.id_usuario;
+
+    let resultado = await controllerCompra.listarComprasUsuario(id_usuario);
+
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
+// Buscar compra por ID (protegido com verificação de proprietário)
+router.get('/compra/:id_compra', verificarToken, async (request, response) => {
+    let id_compra = request.params.id_compra;
+
+    let resultado = await controllerCompra.buscarCompraPorId(id_compra);
+
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
+// Listar todas as compras (admin ou estabelecimento)
+router.get('/compras', verificarAdminOuEstabelecimento, async (request, response) => {
+    let resultado = await controllerCompra.listarTodasCompras();
+
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
+// Listar compras por status (admin ou estabelecimento)
+router.get('/compras/status/:status', verificarAdminOuEstabelecimento, async (request, response) => {
+    let status = request.params.status;
+
+    let resultado = await controllerCompra.listarComprasPorStatus(status);
+
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
+// Atualizar status da compra (admin ou estabelecimento)
+router.put('/compra/:id_compra/status', verificarAdminOuEstabelecimento, bodyParserJson, async (request, response) => {
+    let contentType = request.headers['content-type'];
+    let id_compra = request.params.id_compra;
+    let { status } = request.body;
+
+    let resultado = await controllerCompra.atualizarStatusCompra(id_compra, status, contentType);
+
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
+// Cancelar compra (protegido)
+router.put('/compra/:id_compra/cancelar', verificarToken, bodyParserJson, async (request, response) => {
+    let contentType = request.headers['content-type'];
+    let id_compra = request.params.id_compra;
+
+    let resultado = await controllerCompra.cancelarCompra(id_compra, contentType);
+
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
+// ==============================
+// Rotas de FAVORITOS
+// ==============================
+const controllerFavorito = require('../controller/favorito/favoritoController.js');
+
+// Adicionar produto aos favoritos (protegido)
+router.post('/favoritos', verificarToken, bodyParserJson, async (request, response) => {
+    let contentType = request.headers['content-type'];
+    let dadosBody = request.body;
+
+    let resultado = await controllerFavorito.adicionarFavorito(dadosBody, contentType);
+
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
+// Listar favoritos do usuário (protegido)
+router.get('/favoritos/:id_usuario', verificarToken, async (request, response) => {
+    let id_usuario = request.params.id_usuario;
+
+    let resultado = await controllerFavorito.listarFavoritosUsuario(id_usuario);
+
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
+// Alternar favorito (adiciona/remove) (protegido)
+router.post('/favoritos/toggle', verificarToken, bodyParserJson, async (request, response) => {
+    let contentType = request.headers['content-type'];
+    let dadosBody = request.body;
+
+    let resultado = await controllerFavorito.alternarFavorito(dadosBody, contentType);
+
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
+// Remover produto dos favoritos (protegido)
+router.delete('/favoritos/:id_usuario/:id_produto', verificarToken, async (request, response) => {
+    let id_usuario = request.params.id_usuario;
+    let id_produto = request.params.id_produto;
+
+    let resultado = await controllerFavorito.removerFavorito(id_usuario, id_produto);
+
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
+// Verificar se produto é favorito (protegido)
+router.get('/favoritos/:id_usuario/:id_produto/check', verificarToken, async (request, response) => {
+    let id_usuario = request.params.id_usuario;
+    let id_produto = request.params.id_produto;
+
+    let resultado = await controllerFavorito.verificarFavorito(id_usuario, id_produto);
+
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
+// Listar favoritos em promoção (protegido)
+router.get('/favoritos/:id_usuario/promocoes', verificarToken, async (request, response) => {
+    let id_usuario = request.params.id_usuario;
+
+    let resultado = await controllerFavorito.listarFavoritosEmPromocao(id_usuario);
+
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
+// Produtos mais favoritados (público)
+router.get('/favoritos/mais-favoritados/:limit', async (request, response) => {
+    let limit = request.params.limit;
+
+    let resultado = await controllerFavorito.listarProdutosMaisFavoritados(limit);
+
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
+// Produtos mais favoritados sem limit (público)
+router.get('/favoritos/mais-favoritados', async (request, response) => {
+    let resultado = await controllerFavorito.listarProdutosMaisFavoritados();
+
+    response.status(resultado.status_code);
+
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
+// Contar favoritos do usuário (protegido)
+router.get('/favoritos/:id_usuario/count', verificarToken, async (request, response) => {
+    let id_usuario = request.params.id_usuario;
+
+    let resultado = await controllerFavorito.contarFavoritosUsuario(id_usuario);
+
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
+// ==============================
+// Rotas de NOTIFICAÇÕES
+// ==============================
+const controllerNotificacao = require('../controller/notificacao/notificacaoController.js');
+
+// Criar notificação (admin)
+router.post('/notificacoes', verificarAdmin, bodyParserJson, async (request, response) => {
+    let contentType = request.headers['content-type'];
+    let dadosBody = request.body;
+
+    let resultado = await controllerNotificacao.criarNotificacao(dadosBody, contentType);
+
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
+// Listar notificações do usuário (próprio usuário ou admin)
+router.get('/notificacoes/:id_usuario', verificarProprietarioOuAdmin, async (request, response) => {
+    let id_usuario = request.params.id_usuario;
+    let limit = request.query.limit;
+
+    let resultado = await controllerNotificacao.listarNotificacoesUsuario(id_usuario, limit);
+
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
+// Listar notificações não lidas (próprio usuário ou admin)
+router.get('/notificacoes/:id_usuario/nao-lidas', verificarProprietarioOuAdmin, async (request, response) => {
+    let id_usuario = request.params.id_usuario;
+
+    let resultado = await controllerNotificacao.listarNotificacoesNaoLidas(id_usuario);
+
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
+// Contar notificações não lidas (próprio usuário ou admin)
+router.get('/notificacoes/:id_usuario/count', verificarProprietarioOuAdmin, async (request, response) => {
+    let id_usuario = request.params.id_usuario;
+
+    let resultado = await controllerNotificacao.contarNotificacoesNaoLidas(id_usuario);
+
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
+// Marcar notificação como lida (protegido)
+router.put('/notificacoes/:id_notificacao/lida', verificarToken, bodyParserJson, async (request, response) => {
+    let contentType = request.headers['content-type'];
+    let id_notificacao = request.params.id_notificacao;
+
+    let resultado = await controllerNotificacao.marcarComoLida(id_notificacao, contentType);
+
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
+// Marcar todas as notificações como lidas (protegido)
+router.put('/notificacoes/:id_usuario/marcar-todas-lidas', verificarToken, bodyParserJson, async (request, response) => {
+    let contentType = request.headers['content-type'];
+    let id_usuario = request.params.id_usuario;
+
+    let resultado = await controllerNotificacao.marcarTodasComoLidas(id_usuario, contentType);
+
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
+// Deletar notificação (protegido)
+router.delete('/notificacoes/:id_notificacao', verificarToken, async (request, response) => {
+    let id_notificacao = request.params.id_notificacao;
+
+    let resultado = await controllerNotificacao.deletarNotificacao(id_notificacao);
+
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
+// Listar notificações por tipo (protegido)
+router.get('/notificacoes/:id_usuario/tipo/:tipo', verificarToken, async (request, response) => {
+    let id_usuario = request.params.id_usuario;
+    let tipo = request.params.tipo;
+
+    let resultado = await controllerNotificacao.listarNotificacoesPorTipo(id_usuario, tipo);
+
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
+// ==============================
+// Rotas de AVALIAÇÕES
+// ==============================
+const controllerAvaliacao = require('../controller/avaliacao/avaliacaoController.js');
+
+// Criar avaliação (protegido)
+router.post('/avaliacoes', verificarToken, bodyParserJson, async (request, response) => {
+    let contentType = request.headers['content-type'];
+    let dadosBody = request.body;
+
+    let resultado = await controllerAvaliacao.criarAvaliacao(dadosBody, contentType);
+
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
+// Listar avaliações de produto (público)
+router.get('/avaliacoes/produto/:id_produto', async (request, response) => {
+    let id_produto = request.params.id_produto;
+
+    let resultado = await controllerAvaliacao.listarAvaliacoesProduto(id_produto);
+
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
+// Listar avaliações de estabelecimento (público)
+router.get('/avaliacoes/estabelecimento/:id_estabelecimento', async (request, response) => {
+    let id_estabelecimento = request.params.id_estabelecimento;
+
+    let resultado = await controllerAvaliacao.listarAvaliacoesEstabelecimento(id_estabelecimento);
+
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
+// Listar avaliações do usuário (protegido)
+router.get('/avaliacoes/usuario/:id_usuario', verificarToken, async (request, response) => {
+    let id_usuario = request.params.id_usuario;
+
+    let resultado = await controllerAvaliacao.listarAvaliacoesUsuario(id_usuario);
+
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
+// Atualizar avaliação (protegido)
+router.put('/avaliacoes/:id_avaliacao', verificarToken, bodyParserJson, async (request, response) => {
+    let contentType = request.headers['content-type'];
+    let id_avaliacao = request.params.id_avaliacao;
+    let dadosBody = request.body;
+    dadosBody.id_avaliacao = id_avaliacao;
+
+    let resultado = await controllerAvaliacao.atualizarAvaliacao(dadosBody, contentType);
+
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
+// Deletar avaliação (protegido)
+router.delete('/avaliacoes/:id_avaliacao', verificarToken, async (request, response) => {
+    let id_avaliacao = request.params.id_avaliacao;
+
+    let resultado = await controllerAvaliacao.deletarAvaliacao(id_avaliacao);
+
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
+// Obter estatísticas de produto (público)
+router.get('/avaliacoes/produto/:id_produto/estatisticas', async (request, response) => {
+    let id_produto = request.params.id_produto;
+
+    let resultado = await controllerAvaliacao.obterEstatisticasProduto(id_produto);
+
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
+// Obter estatísticas de estabelecimento (público)
+router.get('/avaliacoes/estabelecimento/:id_estabelecimento/estatisticas', async (request, response) => {
+    let id_estabelecimento = request.params.id_estabelecimento;
+
+    let resultado = await controllerAvaliacao.obterEstatisticasEstabelecimento(id_estabelecimento);
+
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
+// Produtos mais bem avaliados (público)
+router.get('/avaliacoes/produtos/mais-bem-avaliados/:limit', async (request, response) => {
+    let limit = request.params.limit;
+
+    let resultado = await controllerAvaliacao.listarProdutosMaisBemAvaliados(limit);
+
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
+// Produtos mais bem avaliados sem limit (público)
+router.get('/avaliacoes/produtos/mais-bem-avaliados', async (request, response) => {
+    let resultado = await controllerAvaliacao.listarProdutosMaisBemAvaliados();
+
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
+// Verificar se usuário pode avaliar produto e estabelecimento (protegido)
+router.get('/avaliacoes/pode-avaliar/:id_usuario/:id_produto/:id_estabelecimento', verificarToken, async (request, response) => {
+    let id_usuario = request.params.id_usuario;
+    let id_produto = request.params.id_produto;
+    let id_estabelecimento = request.params.id_estabelecimento;
+
+    let resultado = await controllerAvaliacao.verificarPodeAvaliar(id_usuario, id_produto, id_estabelecimento);
+
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
+// Verificar se usuário pode avaliar produto (protegido)
+router.get('/avaliacoes/pode-avaliar/:id_usuario/:id_produto', verificarToken, async (request, response) => {
+    let id_usuario = request.params.id_usuario;
+    let id_produto = request.params.id_produto;
+
+    let resultado = await controllerAvaliacao.verificarPodeAvaliar(id_usuario, id_produto, null);
+
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
+// Verificar se usuário pode avaliar estabelecimento (protegido)
+router.get('/avaliacoes/pode-avaliar/:id_usuario', verificarToken, async (request, response) => {
+    let id_usuario = request.params.id_usuario;
+
+    let resultado = await controllerAvaliacao.verificarPodeAvaliar(id_usuario, null, null);
+
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
+// ==============================
+// Rotas de PROMOÇÕES
+// ==============================
+const controllerPromocao = require('../controller/promocao/promocaoController.js');
+
+// Criar promoção (admin ou estabelecimento)
+router.post('/promocoes', verificarAdminOuEstabelecimento, bodyParserJson, async (request, response) => {
+    let contentType = request.headers['content-type'];
+    let dadosBody = request.body;
+
+    let resultado = await controllerPromocao.criarPromocao(dadosBody, contentType);
+
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
+// Listar promoções ativas (público)
+router.get('/promocoes', async (request, response) => {
+    let resultado = await controllerPromocao.listarPromocoesAtivas();
+
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
+// Listar melhores promoções (público)
+router.get('/promocoes/melhores/:limit', async (request, response) => {
+    let limit = request.params.limit;
+
+    let resultado = await controllerPromocao.listarMelhoresPromocoes(limit);
+
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
+// Listar melhores promoções sem limit (público)
+router.get('/promocoes/melhores', async (request, response) => {
+    let resultado = await controllerPromocao.listarMelhoresPromocoes();
+
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
+// Buscar promoção por ID (público)
+router.get('/promocao/:id_promocao', async (request, response) => {
+    let id_promocao = request.params.id_promocao;
+
+    let resultado = await controllerPromocao.buscarPromocaoPorId(id_promocao);
+
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
+// Listar promoções de produto (público)
+router.get('/promocoes/produto/:id_produto', async (request, response) => {
+    let id_produto = request.params.id_produto;
+
+    let resultado = await controllerPromocao.listarPromocoesProduto(id_produto);
+
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
+// Listar promoções de estabelecimento (público)
+router.get('/promocoes/estabelecimento/:id_estabelecimento', async (request, response) => {
+    let id_estabelecimento = request.params.id_estabelecimento;
+
+    let resultado = await controllerPromocao.listarPromocoesEstabelecimento(id_estabelecimento);
+
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
+// Verificar se produto está em promoção (público)
+router.get('/promocoes/verificar/:id_produto/:id_estabelecimento', async (request, response) => {
+    let id_produto = request.params.id_produto;
+    let id_estabelecimento = request.params.id_estabelecimento;
+
+    let resultado = await controllerPromocao.verificarPromocaoProduto(id_produto, id_estabelecimento);
+
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
+// Atualizar promoção (admin ou estabelecimento)
+router.put('/promocao/:id_promocao', verificarAdminOuEstabelecimento, bodyParserJson, async (request, response) => {
+    let contentType = request.headers['content-type'];
+    let id_promocao = request.params.id_promocao;
+    let dadosBody = request.body;
+    dadosBody.id_promocao = id_promocao;
+
+    let resultado = await controllerPromocao.atualizarPromocao(dadosBody, contentType);
+
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
+// Deletar promoção (admin ou estabelecimento)
+router.delete('/promocao/:id_promocao', verificarAdminOuEstabelecimento, async (request, response) => {
+    let id_promocao = request.params.id_promocao;
+
+    let resultado = await controllerPromocao.deletarPromocao(id_promocao);
+
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
+// Listar todas as promoções (admin)
+router.get('/promocoes/admin/todas', verificarAdmin, async (request, response) => {
+    let resultado = await controllerPromocao.listarTodasPromocoes();
+
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
+// ==============================
+// Rotas de REDE SOCIAL (POSTS)
+// ==============================
+const controllerPost = require('../controller/post/postController.js');
+
+// Criar post (protegido)
+router.post('/posts', verificarToken, bodyParserJson, async (request, response) => {
+    let contentType = request.headers['content-type'];
+    let dadosBody = request.body;
+
+    let resultado = await controllerPost.criarPost(dadosBody, contentType);
+
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
+// Listar posts do feed (protegido)
+router.get('/posts/feed/:page/:limit', verificarToken, async (request, response) => {
+    let page = request.params.page;
+    let limit = request.params.limit;
+
+    let resultado = await controllerPost.listarFeed(page, limit);
+
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
+// Listar posts do feed sem paginação (protegido)
+router.get('/posts/feed', verificarToken, async (request, response) => {
+    let resultado = await controllerPost.listarFeed();
+
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
+// Listar posts de um usuário (protegido)
+router.get('/posts/usuario/:id_usuario/:page/:limit', verificarToken, async (request, response) => {
+    let id_usuario = request.params.id_usuario;
+    let page = request.params.page;
+    let limit = request.params.limit;
+
+    let resultado = await controllerPost.listarPostsUsuario(id_usuario, page, limit);
+
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
+// Listar posts de um usuário sem paginação (protegido)
+router.get('/posts/usuario/:id_usuario', verificarToken, async (request, response) => {
+    let id_usuario = request.params.id_usuario;
+
+    let resultado = await controllerPost.listarPostsUsuario(id_usuario);
+
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
+// Buscar post por ID (protegido)
+router.get('/post/:id_post', verificarToken, async (request, response) => {
+    let id_post = request.params.id_post;
+
+    let resultado = await controllerPost.buscarPostPorId(id_post);
+
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
+// Atualizar post (protegido)
+router.put('/post/:id_post', verificarToken, bodyParserJson, async (request, response) => {
+    let contentType = request.headers['content-type'];
+    let id_post = request.params.id_post;
+    let dadosBody = request.body;
+    dadosBody.id_post = id_post;
+
+    let resultado = await controllerPost.atualizarPost(dadosBody, contentType);
+
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
+// Deletar post (protegido)
+router.delete('/post/:id_post', verificarToken, async (request, response) => {
+    let id_post = request.params.id_post;
+
+    let resultado = await controllerPost.deletarPost(id_post);
+
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
+// Curtir/Descurtir post (protegido)
+router.post('/post/:id_post/curtir', verificarToken, bodyParserJson, async (request, response) => {
+    let id_post = request.params.id_post;
+    let contentType = request.headers['content-type'];
+    let dadosBody = request.body;
+    dadosBody.id_post = id_post;
+
+    let resultado = await controllerPost.curtirPost(dadosBody, contentType);
+
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
+// Comentar post (protegido)
+router.post('/post/:id_post/comentario', verificarToken, bodyParserJson, async (request, response) => {
+    let id_post = request.params.id_post;
+    let contentType = request.headers['content-type'];
+    let dadosBody = request.body;
+    dadosBody.id_post = id_post;
+
+    let resultado = await controllerPost.comentarPost(dadosBody, contentType);
+
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
+// Listar comentários de um post (protegido)
+router.get('/post/:id_post/comentarios/:page/:limit', verificarToken, async (request, response) => {
+    let id_post = request.params.id_post;
+    let page = request.params.page;
+    let limit = request.params.limit;
+
+    let resultado = await controllerPost.listarComentarios(id_post, page, limit);
+
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
+// Listar comentários de um post sem paginação (protegido)
+router.get('/post/:id_post/comentarios', verificarToken, async (request, response) => {
+    let id_post = request.params.id_post;
+
+    let resultado = await controllerPost.listarComentarios(id_post);
+
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
+// Deletar comentário (protegido)
+router.delete('/comentario/:id_comentario', verificarToken, async (request, response) => {
+    let id_comentario = request.params.id_comentario;
+
+    let resultado = await controllerPost.deletarComentario(id_comentario);
+
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
+// Atualizar comentário (protegido)
+router.put('/comentario/:id_comentario', verificarToken, bodyParserJson, async (request, response) => {
+    let contentType = request.headers['content-type'];
+    let id_comentario = request.params.id_comentario;
+    let dadosBody = request.body;
+    dadosBody.id_comentario = id_comentario;
+
+    let resultado = await controllerPost.atualizarComentario(dadosBody, contentType);
+
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
+// Obter estatísticas do post (curtidas e comentários)
+router.get('/post/:id_post/estatisticas', verificarToken, async (request, response) => {
+    let id_post = request.params.id_post;
+
+    let resultado = await controllerPost.obterEstatisticasPost(id_post);
 
     response.status(resultado.status_code);
     response.json(resultado);
