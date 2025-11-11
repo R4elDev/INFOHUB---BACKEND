@@ -12,14 +12,20 @@ global.console = {
   error: jest.fn(),
 };
 
-// Mock global para Prisma (se necessário)
-jest.mock('@prisma/client', () => ({
-  PrismaClient: jest.fn().mockImplementation(() => ({
-    $connect: jest.fn(),
-    $disconnect: jest.fn(),
-    // Adicione outros métodos conforme necessário
-  }))
-}));
+// Configuração de timeout para testes assíncronos (aumentado para testes de banco)
+jest.setTimeout(30000);
 
-// Configuração de timeout para testes assíncronos
-jest.setTimeout(10000);
+// Configuração global de variáveis de ambiente para testes
+process.env.NODE_ENV = 'test';
+
+// Desabilitar logs desnecessários durante os testes
+const originalConsole = global.console;
+global.console = {
+  ...originalConsole,
+  log: process.env.JEST_VERBOSE === 'true' ? originalConsole.log : jest.fn(),
+  info: process.env.JEST_VERBOSE === 'true' ? originalConsole.info : jest.fn(),
+  debug: jest.fn(),
+};
+
+// Configuração para evitar warnings de timeout
+process.env.SUPPRESS_NO_CONFIG_WARNING = 'true';

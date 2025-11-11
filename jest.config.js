@@ -30,8 +30,14 @@ module.exports = {
   // Configuração para variáveis de ambiente de teste
   setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
   
-  // Timeout para testes
-  testTimeout: 10000,
+  // Timeout para testes (aumentado para testes de banco)
+  testTimeout: 30000,
+  
+  // Máximo de workers paralelos (reduz para evitar sobrecarga)
+  maxWorkers: 2,
+  
+  // Execução sequencial para testes de banco
+  runInBand: true,
   
   // Configuração para mocks
   clearMocks: true,
