@@ -1153,6 +1153,33 @@ components:
               type: integer
               example: 150
 
+    # GROQ IA SCHEMAS
+    GroqRequest:
+      type: object
+      required:
+        - pergunta
+      properties:
+        pergunta:
+          type: string
+          description: Pergunta ou mensagem para a IA Groq
+          example: "quantos usuários temos cadastrados?"
+
+    GroqResponse:
+      type: object
+      properties:
+        resposta:
+          type: string
+          description: Resposta interpretada pela IA
+          example: "Temos 15 usuários cadastrados no sistema InfoHub."
+        fonte:
+          type: string
+          description: Fonte da resposta (groq, cache, ia_local)
+          example: "groq_llama-3.1-8b-instant"
+        tempo_resposta:
+          type: string
+          description: Tempo de processamento da resposta
+          example: "real-time"
+
   responses:
     BadRequest:
       description: Requisição inválida
@@ -2205,6 +2232,119 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+
+  # GROQ IA DIRETO
+  /groq:
+    post:
+      tags:
+        - 🤖 Chat IA
+      summary: Interação direta com IA Groq
+      description: |
+        Endpoint para comunicação direta com a IA Groq. Processa perguntas sobre:
+        - Dados de usuários cadastrados
+        - Informações sobre produtos
+        - Estatísticas gerais do sistema
+        - Análise inteligente de dados
+        
+        **Funcionalidades:**
+        - Processamento com múltiplos modelos Groq
+        - Sistema de cache para respostas frequentes
+        - Fallback para IA local se Groq falhar
+        - Resposta sempre garantida (nunca falha)
+      servers:
+        - url: http://localhost:8080/v1/infohub
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GroqRequest'
+            examples:
+              usuarios:
+                summary: Consultar usuários
+                value:
+                  pergunta: "quantos usuários temos cadastrados?"
+              produtos:
+                summary: Consultar produtos
+                value:
+                  pergunta: "que produtos temos no sistema?"
+              resumo:
+                summary: Resumo geral
+                value:
+                  pergunta: "me dê um resumo do sistema"
+      responses:
+        '200':
+          description: Resposta da IA processada com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroqResponse'
+              examples:
+                usuarios_resposta:
+                  summary: Resposta sobre usuários
+                  value:
+                    resposta: "Temos 15 usuários cadastrados no sistema InfoHub. Eles incluem consumidores, administradores e estabelecimentos parceiros."
+                    fonte: "groq_llama-3.1-8b-instant"
+                    tempo_resposta: "real-time"
+                cache_resposta:
+                  summary: Resposta do cache
+                  value:
+                    resposta: "O sistema possui 45 produtos cadastrados em diferentes categorias."
+                    fonte: "cache"
+                    tempo_resposta: "< 1ms"
+        '400':
+          description: Dados inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Erro interno (com fallback local)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroqResponse'
+
+  /chat-groq:
+    post:
+      tags:
+        - 🤖 Chat IA
+      summary: Chat com IA Groq (Endpoint Alternativo)
+      description: |
+        Endpoint alternativo para chat com IA Groq. Funcionalidade idêntica ao `/groq`.
+        
+        **Características:**
+        - Mesmo processamento do endpoint `/groq`
+        - Interface alternativa para compatibilidade
+        - Análise inteligente de perguntas
+        - Respostas contextualizadas
+      servers:
+        - url: http://localhost:8080/v1/infohub
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GroqRequest'
+      responses:
+        '200':
+          description: Resposta da IA
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroqResponse'
+        '400':
+          description: Dados inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Erro interno (com fallback local)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroqResponse'
                 
   # ===============================
   # 🛒 CARRINHO DE COMPRAS
