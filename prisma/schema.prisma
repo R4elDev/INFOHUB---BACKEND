@@ -31,6 +31,7 @@ model Usuario {
 
   // Relacionamentos
   enderecos        EnderecoUsuario[]
+  estabelecimentos Estabelecimento[]
   posts            Post[]
   comentarios      Comentario[]
   curtidas         Curtida[]
@@ -68,12 +69,14 @@ model EnderecoUsuario {
 
 model Estabelecimento {
   id_estabelecimento Int      @id @default(autoincrement())
+  id_usuario         Int
   nome               String   @db.VarChar(120)
   cnpj               String   @unique @db.VarChar(18)
   telefone           String?  @db.VarChar(20)
   data_cadastro      DateTime @default(now()) @db.Timestamp(0)
 
   // Relacionamentos
+  usuario            Usuario  @relation(fields: [id_usuario], references: [id_usuario], onDelete: Cascade)
   enderecos          EnderecoEstabelecimento[]
   precos             PrecoProduto[]
   promocoes          Promocao[]

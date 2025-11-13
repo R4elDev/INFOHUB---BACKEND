@@ -15,6 +15,7 @@ const createEstabelecimento = async function (dadosBody, contentType) {
 
     if (contentType === 'application/json') {
         if (
+            dadosBody.id_usuario == '' || dadosBody.id_usuario == undefined ||
             dadosBody.nome == '' || dadosBody.nome == undefined ||
             dadosBody.cnpj == '' || dadosBody.cnpj == undefined
         ) {
@@ -55,6 +56,7 @@ const updateEstabelecimento = async function (dadosBody, contentType) {
     if (contentType === 'application/json') {
         if (
             dadosBody.id_estabelecimento == '' || dadosBody.id_estabelecimento == undefined ||
+            dadosBody.id_usuario == '' || dadosBody.id_usuario == undefined ||
             dadosBody.nome == '' || dadosBody.nome == undefined ||
             dadosBody.cnpj == '' || dadosBody.cnpj == undefined
         ) {

@@ -12,8 +12,9 @@ const insertEstabelecimento = async function (estabelecimento) {
     try {
         let sql = `
             INSERT INTO tbl_estabelecimento (
-                nome, cnpj, telefone
+                id_usuario, nome, cnpj, telefone
             ) VALUES (
+                ${estabelecimento.id_usuario},
                 '${estabelecimento.nome}',
                 '${estabelecimento.cnpj}',
                 ${estabelecimento.telefone ? `'${estabelecimento.telefone}'` : 'NULL'}
@@ -55,6 +56,7 @@ const updateEstabelecimento = async function (estabelecimento) {
     try {
         let sql = `
             UPDATE tbl_estabelecimento SET
+                id_usuario = ${estabelecimento.id_usuario},
                 nome = '${estabelecimento.nome}',
                 cnpj = '${estabelecimento.cnpj}',
                 telefone = ${estabelecimento.telefone ? `'${estabelecimento.telefone}'` : 'NULL'}

@@ -31,15 +31,17 @@ CREATE TABLE tbl_enderecoUsuario (
     estado CHAR(2),
     latitude DECIMAL(10,8),
     longitude DECIMAL(11,8),
-    CONSTRAINT fk_usuario_endereco FOREIGN KEY (id_usuario) REFERENCES tbl_usuario(id_usuario)
+    CONSTRAINT fk_usuario_endereco FOREIGN KEY (id_usuario) REFERENCES tbl_usuario(id_usuario) ON DELETE CASCADE
 );
 
 CREATE TABLE tbl_estabelecimento (
     id_estabelecimento INT AUTO_INCREMENT PRIMARY KEY,
+    id_usuario INT NOT NULL,
     nome VARCHAR(120) NOT NULL,
     cnpj VARCHAR(18) NOT NULL UNIQUE,
     telefone VARCHAR(20),
-    data_cadastro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    data_cadastro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_estabelecimento_usuario FOREIGN KEY (id_usuario) REFERENCES tbl_usuario(id_usuario) ON DELETE CASCADE
 );
 
 CREATE TABLE tbl_enderecoEstabelecimento (
@@ -54,7 +56,7 @@ CREATE TABLE tbl_enderecoEstabelecimento (
     estado CHAR(2),
     latitude DECIMAL(10,8),
     longitude DECIMAL(11,8),
-    CONSTRAINT fk_estab_endereco FOREIGN KEY (id_estabelecimento) REFERENCES tbl_estabelecimento(id_estabelecimento)
+    CONSTRAINT fk_estab_endereco FOREIGN KEY (id_estabelecimento) REFERENCES tbl_estabelecimento(id_estabelecimento) ON DELETE CASCADE
 );
 
 CREATE TABLE tbl_categoria (
@@ -98,7 +100,7 @@ CREATE TABLE tbl_post (
     conteudo TEXT,
     imagem VARCHAR(255),
     data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_post_usuario FOREIGN KEY (id_usuario) REFERENCES tbl_usuario(id_usuario)
+    CONSTRAINT fk_post_usuario FOREIGN KEY (id_usuario) REFERENCES tbl_usuario(id_usuario) ON DELETE CASCADE
 );
 
 CREATE TABLE tbl_comentario (
@@ -107,8 +109,8 @@ CREATE TABLE tbl_comentario (
     id_usuario INT NOT NULL,
     conteudo TEXT NOT NULL,
     data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_coment_post FOREIGN KEY (id_post) REFERENCES tbl_post(id_post),
-    CONSTRAINT fk_coment_usuario FOREIGN KEY (id_usuario) REFERENCES tbl_usuario(id_usuario)
+    CONSTRAINT fk_coment_post FOREIGN KEY (id_post) REFERENCES tbl_post(id_post) ON DELETE CASCADE,
+    CONSTRAINT fk_coment_usuario FOREIGN KEY (id_usuario) REFERENCES tbl_usuario(id_usuario) ON DELETE CASCADE
 );
 
 CREATE TABLE tbl_curtida (
@@ -116,8 +118,8 @@ CREATE TABLE tbl_curtida (
     id_post INT NOT NULL,
     id_usuario INT NOT NULL,
     data_curtida TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_like_post FOREIGN KEY (id_post) REFERENCES tbl_post(id_post),
-    CONSTRAINT fk_like_usuario FOREIGN KEY (id_usuario) REFERENCES tbl_usuario(id_usuario)
+    CONSTRAINT fk_like_post FOREIGN KEY (id_post) REFERENCES tbl_post(id_post) ON DELETE CASCADE,
+    CONSTRAINT fk_like_usuario FOREIGN KEY (id_usuario) REFERENCES tbl_usuario(id_usuario) ON DELETE CASCADE
 );
 
 CREATE TABLE tbl_compartilhamento (
@@ -125,8 +127,8 @@ CREATE TABLE tbl_compartilhamento (
     id_post INT NOT NULL,
     id_usuario INT NOT NULL,
     data_compartilhamento TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_share_post FOREIGN KEY (id_post) REFERENCES tbl_post(id_post),
-    CONSTRAINT fk_share_usuario FOREIGN KEY (id_usuario) REFERENCES tbl_usuario(id_usuario)
+    CONSTRAINT fk_share_post FOREIGN KEY (id_post) REFERENCES tbl_post(id_post) ON DELETE CASCADE,
+    CONSTRAINT fk_share_usuario FOREIGN KEY (id_usuario) REFERENCES tbl_usuario(id_usuario) ON DELETE CASCADE
 );
 
 CREATE TABLE tbl_favorito (
@@ -134,8 +136,8 @@ CREATE TABLE tbl_favorito (
     id_usuario INT NOT NULL,
     id_produto INT NOT NULL,
     data_adicionado TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_fav_usuario FOREIGN KEY (id_usuario) REFERENCES tbl_usuario(id_usuario),
-    CONSTRAINT fk_fav_produto FOREIGN KEY (id_produto) REFERENCES tbl_produto(id_produto)
+    CONSTRAINT fk_fav_usuario FOREIGN KEY (id_usuario) REFERENCES tbl_usuario(id_usuario) ON DELETE CASCADE,
+    CONSTRAINT fk_fav_produto FOREIGN KEY (id_produto) REFERENCES tbl_produto(id_produto) ON DELETE CASCADE
 );
 
 CREATE TABLE tbl_notificacao (
@@ -255,7 +257,7 @@ MODIFY COLUMN tipo ENUM('promocao','alerta','social','compra','carrinho');
 CREATE TABLE IF NOT EXISTS tbl_infocash (
     id_transacao INT AUTO_INCREMENT PRIMARY KEY,
     id_usuario INT NOT NULL,
-    tipo_acao ENUM('avaliacao_promocao','cadastro_produto','avaliacao_empresa') NOT NULL,
+    tipo_acao ENUM('avaliacao_promocao','cadastro_produto','cadastro_preco_produto','avaliacao_empresa') NOT NULL,
     pontos INT NOT NULL,
     descricao VARCHAR(255) NOT NULL,
     data_transacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -272,32 +274,17 @@ CREATE TABLE IF NOT EXISTS tbl_saldo_infocash (
 );
 
 -- =============================================
--- ÍNDICES PARA PERFORMANCE
+-- ÍNDICES ADICIONAIS PARA PERFORMANCE
+-- (FKs já criam índices automaticamente no MySQL)
 -- =============================================
 
--- Índices para carrinho
-CREATE INDEX idx_carrinho_usuario ON tbl_carrinho(id_usuario);
-CREATE INDEX idx_carrinho_produto ON tbl_carrinho(id_produto);
-
--- Índices para compras
-CREATE INDEX idx_compra_usuario ON tbl_compra(id_usuario);
-CREATE INDEX idx_compra_estabelecimento ON tbl_compra(id_estabelecimento);
+-- Índices compostos e de busca específica
 CREATE INDEX idx_compra_data ON tbl_compra(data_compra);
 CREATE INDEX idx_compra_status ON tbl_compra(status_compra);
-
--- Índices para itens de compra
-CREATE INDEX idx_item_compra ON tbl_itemCompra(id_compra);
-CREATE INDEX idx_item_produto ON tbl_itemCompra(id_produto);
-
--- Índices para avaliações
-CREATE INDEX idx_avaliacao_usuario ON tbl_avaliacao(id_usuario);
-CREATE INDEX idx_avaliacao_produto ON tbl_avaliacao(id_produto);
-CREATE INDEX idx_avaliacao_estabelecimento ON tbl_avaliacao(id_estabelecimento);
-
--- Índices para infocash
-CREATE INDEX idx_infocash_usuario ON tbl_infocash(id_usuario);
 CREATE INDEX idx_infocash_tipo ON tbl_infocash(tipo_acao);
 CREATE INDEX idx_infocash_data ON tbl_infocash(data_transacao);
+CREATE INDEX idx_promocao_datas ON tbl_promocao(data_inicio, data_fim);
+CREATE INDEX idx_notificacao_lida ON tbl_notificacao(id_usuario, lida);
 
 -- =============================================
 -- TRIGGERS PARA NOTIFICAÇÕES AUTOMÁTICAS
@@ -374,24 +361,24 @@ BEGIN
     END IF;
 END//
 
--- Trigger para conceder pontos quando cadastrar produto (se usuário for estabelecimento)
-CREATE TRIGGER tr_infocash_cadastro_produto
-AFTER INSERT ON tbl_produto
+-- Trigger para conceder pontos quando cadastrar preço de produto (relacionado ao estabelecimento)
+CREATE TRIGGER tr_infocash_cadastro_preco_produto
+AFTER INSERT ON tbl_precoProduto
 FOR EACH ROW
 BEGIN
     DECLARE id_usuario_estabelecimento INT;
-    DECLARE pontos_ganhos INT DEFAULT 5; -- 5 pontos por cadastrar produto
+    DECLARE pontos_ganhos INT DEFAULT 5; -- 5 pontos por cadastrar preço de produto
     
     -- Buscar o usuário responsável pelo estabelecimento
     SELECT id_usuario INTO id_usuario_estabelecimento 
-    FROM tbl_estabelecimento 
+    FROM tbl_estabelecimento
     WHERE id_estabelecimento = NEW.id_estabelecimento 
     LIMIT 1;
     
     IF id_usuario_estabelecimento IS NOT NULL THEN
         INSERT INTO tbl_infocash (id_usuario, tipo_acao, pontos, descricao, referencia_id)
-        VALUES (id_usuario_estabelecimento, 'cadastro_produto', pontos_ganhos, 
-               'Pontos ganhos por cadastrar novo produto', NEW.id_produto);
+        VALUES (id_usuario_estabelecimento, 'cadastro_preco_produto', pontos_ganhos, 
+               'Pontos ganhos por cadastrar preço de produto', NEW.id_preco);
         
         -- Atualizar saldo do usuário
         INSERT INTO tbl_saldo_infocash (id_usuario, saldo_total)
@@ -456,11 +443,7 @@ INNER JOIN tbl_usuario u ON s.id_usuario = u.id_usuario
 LEFT JOIN tbl_infocash i ON s.id_usuario = i.id_usuario
 GROUP BY s.id_usuario, u.nome, s.saldo_total, s.ultima_atualizacao;
 
--- Adicionar campo id_usuario na tabela de estabelecimento se não existir
--- (Necessário para o trigger de cadastro de produto funcionar)
-ALTER TABLE tbl_estabelecimento 
-ADD COLUMN IF NOT EXISTS id_usuario INT NULL,
-ADD CONSTRAINT fk_estabelecimento_usuario FOREIGN KEY (id_usuario) REFERENCES tbl_usuario(id_usuario);
+-- Campo id_usuario já foi adicionado na criação da tabela tbl_estabelecimento
 
 -- Inserir alguns dados de exemplo para testar
 INSERT IGNORE INTO tbl_categoria (nome) VALUES 
