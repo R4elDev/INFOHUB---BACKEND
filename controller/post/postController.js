@@ -18,6 +18,11 @@ const criarPost = async function (dadosPost, contentType) {
         }
 
         const { id_usuario, conteudo, foto_url, id_produto, id_estabelecimento } = dadosPost;
+        
+        // Padronizar nome do campo para o DAO
+        if (foto_url) {
+            dadosPost.imagem = foto_url;
+        }
 
         if (!id_usuario || !conteudo) {
             return {
@@ -160,7 +165,7 @@ const buscarPostPorId = async function (id_post) {
 
         if (resultPost) {
             // Buscar comentários do post
-            let comentarios = await postDAO.selectComentariosPost(id_post);
+            let comentarios = await postDAO.selectComentariosByPost(id_post);
 
             return {
                 status: true,
@@ -223,7 +228,7 @@ const listarPostsUsuario = async function (id_usuario) {
  */
 const listarTodosPosts = async function (limit = 20, offset = 0) {
     try {
-        let resultPosts = await postDAO.selectAllPosts(limit, offset);
+        let resultPosts = await postDAO.selectAllPosts(limit);
 
         if (resultPosts) {
             return {
@@ -248,6 +253,39 @@ const listarTodosPosts = async function (limit = 20, offset = 0) {
 };
 
 /**
+ * LISTAR FEED COM PAGINAÇÃO
+ */
+const listarFeed = async function (page = 1, limit = 20) {
+    try {
+        let resultPosts = await postDAO.getFeedPosts(limit);
+
+        if (resultPosts) {
+            return {
+                status: true,
+                status_code: 200,
+                message: "Feed carregado com sucesso.",
+                data: resultPosts,
+                page: parseInt(page),
+                limit: parseInt(limit)
+            };
+        } else {
+            return {
+                status: true,
+                status_code: 200,
+                message: "Nenhum post encontrado no feed.",
+                data: [],
+                page: parseInt(page),
+                limit: parseInt(limit)
+            };
+        }
+
+    } catch (error) {
+        console.log("ERRO NO CONTROLLER LISTAR FEED:", error);
+        return MESSAGE.ERROR_INTERNAL_SERVER;
+    }
+};
+
+/**
  * LISTAR POSTS DE PRODUTO
  */
 const listarPostsProduto = async function (id_produto) {
@@ -260,7 +298,7 @@ const listarPostsProduto = async function (id_produto) {
             };
         }
 
-        let resultPosts = await postDAO.selectPostsProduto(id_produto);
+        let resultPosts = await postDAO.selectPostsByProduto(id_produto);
 
         if (resultPosts) {
             return {
@@ -297,7 +335,7 @@ const listarPostsEstabelecimento = async function (id_estabelecimento) {
             };
         }
 
-        let resultPosts = await postDAO.selectPostsEstabelecimento(id_estabelecimento);
+        let resultPosts = await postDAO.selectPostsByEstabelecimento(id_estabelecimento);
 
         if (resultPosts) {
             return {
@@ -358,7 +396,7 @@ const comentarPost = async function (dadosComentario, contentType) {
             };
         }
 
-        let resultComentario = await postDAO.insertComentario(dadosComentario);
+        let resultComentario = await postDAO.adicionarComentario(dadosComentario);
 
         if (resultComentario) {
             // Notificar o dono do post (se não for ele mesmo comentando)
@@ -382,6 +420,79 @@ const comentarPost = async function (dadosComentario, contentType) {
 
     } catch (error) {
         console.log("ERRO NO CONTROLLER COMENTAR POST:", error);
+        return MESSAGE.ERROR_INTERNAL_SERVER;
+    }
+};
+
+/**
+ * LISTAR COMENTÁRIOS DE UM POST
+ */
+const listarComentarios = async function (id_post, page = null, limit = null) {
+    try {
+        if (!id_post) {
+            return {
+                status: false,
+                status_code: 400,
+                message: "Parâmetro 'id_post' é obrigatório."
+            };
+        }
+
+        let comentarios = await postDAO.selectComentariosByPost(id_post);
+
+        return {
+            status: true,
+            status_code: 200,
+            message: "Comentários encontrados com sucesso.",
+            data: comentarios || []
+        };
+
+    } catch (error) {
+        console.log("ERRO NO CONTROLLER LISTAR COMENTÁRIOS:", error);
+        return MESSAGE.ERROR_INTERNAL_SERVER;
+    }
+};
+
+/**
+ * ATUALIZAR COMENTÁRIO
+ */
+const atualizarComentario = async function (dadosComentario, contentType) {
+    try {
+        if (contentType !== 'application/json') {
+            return MESSAGE.ERROR_CONTENT_TYPE;
+        }
+
+        const { id_comentario, conteudo } = dadosComentario;
+
+        if (!id_comentario) {
+            return {
+                status: false,
+                status_code: 400,
+                message: "Campo 'id_comentario' é obrigatório."
+            };
+        }
+
+        if (conteudo && (conteudo.length < 1 || conteudo.length > 200)) {
+            return {
+                status: false,
+                status_code: 400,
+                message: "Comentário deve ter entre 1 e 200 caracteres."
+            };
+        }
+
+        let resultUpdate = await postDAO.updateComentario(dadosComentario);
+
+        if (resultUpdate) {
+            return {
+                status: true,
+                status_code: 200,
+                message: "Comentário atualizado com sucesso."
+            };
+        } else {
+            return MESSAGE.ERROR_NOT_FOUND;
+        }
+
+    } catch (error) {
+        console.log("ERRO NO CONTROLLER ATUALIZAR COMENTÁRIO:", error);
         return MESSAGE.ERROR_INTERNAL_SERVER;
     }
 };
@@ -516,9 +627,12 @@ module.exports = {
     buscarPostPorId,
     listarPostsUsuario,
     listarTodosPosts,
+    listarFeed,
     listarPostsProduto,
     listarPostsEstabelecimento,
     comentarPost,
+    listarComentarios,
+    atualizarComentario,
     deletarComentario,
     toggleCurtidaPost,
     verificarCurtidaUsuario

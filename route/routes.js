@@ -463,13 +463,32 @@ const controllerCarrinho = require('../controller/carrinho/carrinhoController.js
 
 // Adicionar item ao carrinho (protegido)
 router.post('/carrinho', verificarToken, bodyParserJson, async (request, response) => {
-    let contentType = request.headers['content-type'];
-    let dadosBody = request.body;
+    try {
+        let contentType = request.headers['content-type'];
+        let dadosBody = request.body;
 
-    let resultado = await controllerCarrinho.adicionarItemCarrinho(dadosBody, contentType);
+        let resultado = await controllerCarrinho.adicionarItemCarrinho(dadosBody, contentType);
 
-    response.status(resultado.status_code);
-    response.json(resultado);
+        if (resultado && resultado.status_code) {
+            response.status(resultado.status_code);
+            response.json(resultado);
+        } else {
+            response.status(500);
+            response.json({
+                status: false,
+                status_code: 500,
+                message: "Erro interno do servidor"
+            });
+        }
+    } catch (error) {
+        console.log("ERRO NA ROTA CARRINHO:", error);
+        response.status(500);
+        response.json({
+            status: false,
+            status_code: 500,
+            message: "Erro interno do servidor"
+        });
+    }
 });
 
 // Listar carrinho do usuário (próprio usuário ou admin)
@@ -1072,13 +1091,32 @@ const controllerPost = require('../controller/post/postController.js');
 
 // Criar post (protegido)
 router.post('/posts', verificarToken, bodyParserJson, async (request, response) => {
-    let contentType = request.headers['content-type'];
-    let dadosBody = request.body;
+    try {
+        let contentType = request.headers['content-type'];
+        let dadosBody = request.body;
 
-    let resultado = await controllerPost.criarPost(dadosBody, contentType);
+        let resultado = await controllerPost.criarPost(dadosBody, contentType);
 
-    response.status(resultado.status_code);
-    response.json(resultado);
+        if (resultado && resultado.status_code) {
+            response.status(resultado.status_code);
+            response.json(resultado);
+        } else {
+            response.status(500);
+            response.json({
+                status: false,
+                status_code: 500,
+                message: "Erro interno do servidor ao criar post"
+            });
+        }
+    } catch (error) {
+        console.log("ERRO NA ROTA CRIAR POST:", error);
+        response.status(500);
+        response.json({
+            status: false,
+            status_code: 500,
+            message: "Erro interno do servidor"
+        });
+    }
 });
 
 // Listar posts do feed (protegido)

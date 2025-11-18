@@ -353,6 +353,95 @@ const getFeedPosts = async function (limite = 20) {
     }
 };
 
+// ================================ UPDATE COMENTARIO =================================
+const updateComentario = async function (comentario) {
+    try {
+        let sql = `
+            UPDATE tbl_comentario SET
+                conteudo = '${comentario.conteudo}'
+            WHERE id_comentario = ${comentario.id_comentario}
+        `;
+
+        let result = await prisma.$executeRawUnsafe(sql);
+        return result > 0;
+    } catch (error) {
+        console.log("ERRO AO ATUALIZAR COMENTÁRIO:", error);
+        return false;
+    }
+};
+
+// ================================ DELETE COMENTARIO =================================
+const deleteComentario = async function (id_comentario) {
+    try {
+        let sql = `DELETE FROM tbl_comentario WHERE id_comentario = ${id_comentario}`;
+        let result = await prisma.$executeRawUnsafe(sql);
+        return result > 0;
+    } catch (error) {
+        console.log("ERRO AO DELETAR COMENTÁRIO:", error);
+        return false;
+    }
+};
+
+// ================================ TOGGLE CURTIDA =================================
+const toggleCurtida = async function (id_post, id_usuario) {
+    try {
+        // Verificar se já curtiu
+        let sqlVerificar = `
+            SELECT id_curtida FROM tbl_curtida 
+            WHERE id_post = ${id_post} AND id_usuario = ${id_usuario}
+        `;
+        let curtidaExistente = await prisma.$queryRawUnsafe(sqlVerificar);
+
+        if (curtidaExistente.length > 0) {
+            // Remover curtida
+            let sqlRemover = `
+                DELETE FROM tbl_curtida 
+                WHERE id_post = ${id_post} AND id_usuario = ${id_usuario}
+            `;
+            await prisma.$executeRawUnsafe(sqlRemover);
+            return { curtido: false, acao: 'removida' };
+        } else {
+            // Adicionar curtida
+            let sqlAdicionar = `
+                INSERT INTO tbl_curtida (id_post, id_usuario) 
+                VALUES (${id_post}, ${id_usuario})
+            `;
+            await prisma.$executeRawUnsafe(sqlAdicionar);
+            return { curtido: true, acao: 'adicionada' };
+        }
+    } catch (error) {
+        console.log("ERRO AO TOGGLE CURTIDA:", error);
+        return false;
+    }
+};
+
+// ================================ COUNT CURTIDAS =================================
+const countCurtidasPost = async function (id_post) {
+    try {
+        let sql = `SELECT COUNT(*) as total FROM tbl_curtida WHERE id_post = ${id_post}`;
+        let result = await prisma.$queryRawUnsafe(sql);
+        return result[0].total || 0;
+    } catch (error) {
+        console.log("ERRO AO CONTAR CURTIDAS:", error);
+        return 0;
+    }
+};
+
+// ================================ VERIFICAR CURTIDA USUARIO =================================
+const verificarCurtidaUsuario = async function (id_post, id_usuario) {
+    try {
+        let sql = `
+            SELECT id_curtida FROM tbl_curtida 
+            WHERE id_post = ${id_post} AND id_usuario = ${id_usuario}
+        `;
+        let result = await prisma.$queryRawUnsafe(sql);
+        return result.length > 0;
+    } catch (error) {
+        console.log("ERRO AO VERIFICAR CURTIDA:", error);
+        return false;
+    }
+};
+
 module.exports = {
     insertPost,
     updatePost,
@@ -365,5 +454,10 @@ module.exports = {
     toggleCurtidaPost,
     adicionarComentario,
     selectComentariosByPost,
-    getFeedPosts
+    getFeedPosts,
+    updateComentario,
+    deleteComentario,
+    toggleCurtida,
+    countCurtidasPost,
+    verificarCurtidaUsuario
 };
