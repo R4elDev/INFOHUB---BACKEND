@@ -71,7 +71,11 @@ async function interpretarPergunta(req, res) {
     
   } catch (err) {
     console.error('Erro no groqController:', err);
-    res.status(500).json({ erro: err.message });
+    res.status(503).json({ 
+      erro: 'Serviço de IA temporariamente indisponível',
+      detalhes: err.message,
+      status: 'Groq API não respondeu'
+    });
   }
 }
 

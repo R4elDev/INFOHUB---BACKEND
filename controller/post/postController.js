@@ -50,12 +50,12 @@ const criarPost = async function (dadosPost, contentType) {
                 data: resultPost
             };
         } else {
-            return MESSAGE.ERROR_INTERNAL_SERVER_DB;
+            return MESSAGE.ERROR_INTERNAL_SERVER_MODEL;
         }
 
     } catch (error) {
         console.log("ERRO NO CONTROLLER CRIAR POST:", error);
-        return MESSAGE.ERROR_INTERNAL_SERVER;
+        return MESSAGE.ERROR_INTERNAL_SERVER_CONTROLLER;
     }
 };
 
@@ -107,7 +107,7 @@ const atualizarPost = async function (dadosPost, contentType) {
 
     } catch (error) {
         console.log("ERRO NO CONTROLLER ATUALIZAR POST:", error);
-        return MESSAGE.ERROR_INTERNAL_SERVER;
+        return MESSAGE.ERROR_INTERNAL_SERVER_CONTROLLER;
     }
 };
 
@@ -144,7 +144,7 @@ const deletarPost = async function (id_post) {
 
     } catch (error) {
         console.log("ERRO NO CONTROLLER DELETAR POST:", error);
-        return MESSAGE.ERROR_INTERNAL_SERVER;
+        return MESSAGE.ERROR_INTERNAL_SERVER_CONTROLLER;
     }
 };
 
@@ -182,7 +182,7 @@ const buscarPostPorId = async function (id_post) {
 
     } catch (error) {
         console.log("ERRO NO CONTROLLER BUSCAR POST POR ID:", error);
-        return MESSAGE.ERROR_INTERNAL_SERVER;
+        return MESSAGE.ERROR_INTERNAL_SERVER_CONTROLLER;
     }
 };
 
@@ -219,7 +219,7 @@ const listarPostsUsuario = async function (id_usuario) {
 
     } catch (error) {
         console.log("ERRO NO CONTROLLER LISTAR POSTS USUARIO:", error);
-        return MESSAGE.ERROR_INTERNAL_SERVER;
+        return MESSAGE.ERROR_INTERNAL_SERVER_CONTROLLER;
     }
 };
 
@@ -248,7 +248,7 @@ const listarTodosPosts = async function (limit = 20, offset = 0) {
 
     } catch (error) {
         console.log("ERRO NO CONTROLLER LISTAR TODOS POSTS:", error);
-        return MESSAGE.ERROR_INTERNAL_SERVER;
+        return MESSAGE.ERROR_INTERNAL_SERVER_CONTROLLER;
     }
 };
 
@@ -281,7 +281,7 @@ const listarFeed = async function (page = 1, limit = 20) {
 
     } catch (error) {
         console.log("ERRO NO CONTROLLER LISTAR FEED:", error);
-        return MESSAGE.ERROR_INTERNAL_SERVER;
+        return MESSAGE.ERROR_INTERNAL_SERVER_CONTROLLER;
     }
 };
 
@@ -318,7 +318,7 @@ const listarPostsProduto = async function (id_produto) {
 
     } catch (error) {
         console.log("ERRO NO CONTROLLER LISTAR POSTS PRODUTO:", error);
-        return MESSAGE.ERROR_INTERNAL_SERVER;
+        return MESSAGE.ERROR_INTERNAL_SERVER_CONTROLLER;
     }
 };
 
@@ -355,7 +355,7 @@ const listarPostsEstabelecimento = async function (id_estabelecimento) {
 
     } catch (error) {
         console.log("ERRO NO CONTROLLER LISTAR POSTS ESTABELECIMENTO:", error);
-        return MESSAGE.ERROR_INTERNAL_SERVER;
+        return MESSAGE.ERROR_INTERNAL_SERVER_CONTROLLER;
     }
 };
 
@@ -415,12 +415,12 @@ const comentarPost = async function (dadosComentario, contentType) {
                 data: resultComentario
             };
         } else {
-            return MESSAGE.ERROR_INTERNAL_SERVER_DB;
+            return MESSAGE.ERROR_INTERNAL_SERVER_MODEL;
         }
 
     } catch (error) {
         console.log("ERRO NO CONTROLLER COMENTAR POST:", error);
-        return MESSAGE.ERROR_INTERNAL_SERVER;
+        return MESSAGE.ERROR_INTERNAL_SERVER_CONTROLLER;
     }
 };
 
@@ -448,7 +448,7 @@ const listarComentarios = async function (id_post, page = null, limit = null) {
 
     } catch (error) {
         console.log("ERRO NO CONTROLLER LISTAR COMENTÁRIOS:", error);
-        return MESSAGE.ERROR_INTERNAL_SERVER;
+        return MESSAGE.ERROR_INTERNAL_SERVER_CONTROLLER;
     }
 };
 
@@ -493,7 +493,7 @@ const atualizarComentario = async function (dadosComentario, contentType) {
 
     } catch (error) {
         console.log("ERRO NO CONTROLLER ATUALIZAR COMENTÁRIO:", error);
-        return MESSAGE.ERROR_INTERNAL_SERVER;
+        return MESSAGE.ERROR_INTERNAL_SERVER_CONTROLLER;
     }
 };
 
@@ -524,7 +524,7 @@ const deletarComentario = async function (id_comentario) {
 
     } catch (error) {
         console.log("ERRO NO CONTROLLER DELETAR COMENTÁRIO:", error);
-        return MESSAGE.ERROR_INTERNAL_SERVER;
+        return MESSAGE.ERROR_INTERNAL_SERVER_CONTROLLER;
     }
 };
 
@@ -579,12 +579,12 @@ const toggleCurtidaPost = async function (id_post, id_usuario, contentType) {
                 }
             };
         } else {
-            return MESSAGE.ERROR_INTERNAL_SERVER_DB;
+            return MESSAGE.ERROR_INTERNAL_SERVER_MODEL;
         }
 
     } catch (error) {
         console.log("ERRO NO CONTROLLER CURTIR POST:", error);
-        return MESSAGE.ERROR_INTERNAL_SERVER;
+        return MESSAGE.ERROR_INTERNAL_SERVER_CONTROLLER;
     }
 };
 
@@ -616,7 +616,7 @@ const verificarCurtidaUsuario = async function (id_post, id_usuario) {
 
     } catch (error) {
         console.log("ERRO NO CONTROLLER VERIFICAR CURTIDA:", error);
-        return MESSAGE.ERROR_INTERNAL_SERVER;
+        return MESSAGE.ERROR_INTERNAL_SERVER_CONTROLLER;
     }
 };
 

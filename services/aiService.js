@@ -1,7 +1,7 @@
 // ====================================
-// 🤖 SERVIÇO DE IA HÍBRIDO - NUNCA FALHA
+// 🤖 SERVIÇO DE IA GROQ - DEDICADO
 // ====================================
-// Sistema com múltiplas camadas de fallback para TCC
+// Sistema que usa exclusivamente Groq API com múltiplos modelos
 
 const axios = require('axios');
 
@@ -34,7 +34,7 @@ async function perguntarIA(mensagem, contexto = '') {
     };
   }
 
-  // 2. Tentar modelos Groq em ordem de prioridade
+  // 2. Usar apenas Groq API - tentar todos os modelos
   for (let i = 0; i < MODELS.length; i++) {
     const modelo = MODELS[i];
     
@@ -56,18 +56,19 @@ async function perguntarIA(mensagem, contexto = '') {
       
       // Se for rate limit, aguardar um pouco antes do próximo modelo
       if (error.message.includes('rate_limit')) {
-        console.log('⏳ Rate limit - aguardando 2s...');
-        await sleep(2000);
+        console.log('⏳ Rate limit - aguardando 5s...');
+        await sleep(5000);
+      }
+      
+      // Se for o último modelo e falhou, lançar erro
+      if (i === MODELS.length - 1) {
+        throw new Error(`Todos os modelos Groq falharam. Último erro: ${error.message}`);
       }
       
       // Continuar para o próximo modelo
       continue;
     }
   }
-
-  // 3. Se todos os modelos falharam, usar resposta inteligente local
-  console.log('🔄 Todos os modelos falharam - usando IA local');
-  return gerarRespostaLocal(mensagem, contexto);
 }
 
 // ====================================
@@ -98,79 +99,14 @@ INSTRUÇÕES:
         'Authorization': `Bearer ${GROQ_API_KEY}`,
         'Content-Type': 'application/json'
       },
-      timeout: 10000 // 10 segundos timeout
+      timeout: 30000 // 30 segundos timeout
     }
   );
 
   return response.data.choices[0].message.content;
 }
 
-// ====================================
-// 🧠 IA LOCAL - NUNCA FALHA
-// ====================================
-function gerarRespostaLocal(mensagem, contexto) {
-  const perguntaLower = mensagem.toLowerCase();
-  
-  // Respostas inteligentes baseadas em padrões
-  if (perguntaLower.includes('usuario') || perguntaLower.includes('usuário')) {
-    const match = contexto.match(/Total de usuários[:\s]+(\d+)/i);
-    const total = match ? match[1] : 'alguns';
-    return {
-      resposta: `Temos ${total} usuários cadastrados no sistema InfoHub. Eles incluem consumidores, administradores e estabelecimentos parceiros.`,
-      fonte: 'ia_local',
-      tempo_resposta: '< 10ms'
-    };
-  }
-  
-  if (perguntaLower.includes('produto')) {
-    const match = contexto.match(/Total de produtos[:\s]+(\d+)/i);
-    const total = match ? match[1] : 'vários';
-    return {
-      resposta: `O sistema possui ${total} produtos cadastrados em diferentes categorias como alimentação, higiene, limpeza e medicamentos.`,
-      fonte: 'ia_local',
-      tempo_resposta: '< 10ms'
-    };
-  }
-  
-  if (perguntaLower.includes('promocao') || perguntaLower.includes('promoção')) {
-    return {
-      resposta: `Temos várias promoções ativas no momento! Produtos como arroz, leite, shampoo e refrigerantes estão com descontos especiais em diferentes estabelecimentos.`,
-      fonte: 'ia_local',
-      tempo_resposta: '< 10ms'
-    };
-  }
-  
-  if (perguntaLower.includes('preco') || perguntaLower.includes('preço')) {
-    return {
-      resposta: `O InfoHub compara preços de produtos em diferentes estabelecimentos. Por exemplo, o leite varia de R$ 4,10 a R$ 5,00 dependendo do local.`,
-      fonte: 'ia_local',
-      tempo_resposta: '< 10ms'
-    };
-  }
-  
-  if (perguntaLower.includes('estabelecimento')) {
-    return {
-      resposta: `Temos parceria com 5 estabelecimentos: Supermercado Bom Preço, Farmácia Saúde Total, Mercadinho do Bairro, Drogaria Popular e Atacadão Central.`,
-      fonte: 'ia_local',
-      tempo_resposta: '< 10ms'
-    };
-  }
-  
-  if (perguntaLower.includes('resumo') || perguntaLower.includes('geral')) {
-    return {
-      resposta: `📊 InfoHub - Resumo Geral:\n\n✅ Usuários cadastrados\n✅ Produtos em múltiplas categorias\n✅ Estabelecimentos parceiros\n✅ Promoções ativas\n✅ Comparação de preços\n\nSistema funcionando perfeitamente para sua apresentação!`,
-      fonte: 'ia_local',
-      tempo_resposta: '< 10ms'
-    };
-  }
-  
-  // Resposta genérica inteligente
-  return {
-    resposta: `Entendi sua pergunta sobre "${mensagem}". O InfoHub é uma plataforma completa de promoções e produtos que conecta usuários e estabelecimentos. Posso ajudar com informações sobre usuários, produtos, preços e promoções. Que informação específica você gostaria?`,
-    fonte: 'ia_local',
-    tempo_resposta: '< 10ms'
-  };
-}
+
 
 // ====================================
 // 🛠️ UTILITÁRIOS
