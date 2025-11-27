@@ -50,12 +50,12 @@ const criarPost = async function (dadosPost, contentType) {
                 data: resultPost
             };
         } else {
-            return MESSAGE.ERROR_INTERNAL_SERVER_MODEL;
+            return MESSAGE.ERROR_INTERNAL_SERVER_DB;
         }
 
     } catch (error) {
         console.log("ERRO NO CONTROLLER CRIAR POST:", error);
-        return MESSAGE.ERROR_INTERNAL_SERVER_CONTROLLER;
+        return MESSAGE.ERROR_INTERNAL_SERVER;
     }
 };
 

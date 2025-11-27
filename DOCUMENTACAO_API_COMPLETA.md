@@ -4,6 +4,131 @@
 
 ### **Base URL:** `http://localhost:8080/v1/infohub`
 
+> **⚠️ IMPORTANTE - Atualizações 27/11/2025:**
+> - ✅ **Erro 500 no sistema de posts foi CORRIGIDO**
+> - ✅ **DAO de posts refatorado com prepared statements**  
+> - ✅ **Segurança contra SQL injection implementada**
+> - ✅ **Campos da tabela tbl_post alinhados com o código**
+> - ✅ **Sistema funcionando perfeitamente**
+
+---
+
+## 📱 **Rede Social - Posts**
+
+### **Criar Post**
+```http
+POST /posts
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "id_usuario": 3,
+  "conteudo": "Compartilhando minha experiência com este produto incrível!",
+  "titulo": "Produto Recomendado",
+  "imagem": "https://exemplo.com/imagem.jpg"
+}
+```
+
+### **Listar Feed de Posts**
+```http
+GET /posts/feed
+Authorization: Bearer <token>
+```
+
+### **Listar Feed com Paginação**
+```http
+GET /posts/feed/{page}/{limit}
+Authorization: Bearer <token>
+```
+
+### **Listar Posts do Usuário**
+```http
+GET /posts/usuario/{id_usuario}
+Authorization: Bearer <token>
+```
+
+### **Listar Posts do Usuário com Paginação**
+```http
+GET /posts/usuario/{id_usuario}/{page}/{limit}
+Authorization: Bearer <token>
+```
+
+### **Buscar Post por ID**
+```http
+GET /posts/{id_post}
+Authorization: Bearer <token>
+```
+
+### **Atualizar Post**
+```http
+PUT /posts/{id_post}
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "conteudo": "Conteúdo atualizado do post",
+  "titulo": "Novo título"
+}
+```
+
+### **Deletar Post**
+```http
+DELETE /posts/{id_post}
+Authorization: Bearer <token>
+```
+
+### **Curtir/Descurtir Post**
+```http
+POST /posts/{id_post}/curtir
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "id_usuario": 3
+}
+```
+
+### **Verificar se Usuário Curtiu**
+```http
+GET /posts/{id_post}/curtida/{id_usuario}
+Authorization: Bearer <token>
+```
+
+### **Comentar em Post**
+```http
+POST /posts/{id_post}/comentarios
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "id_usuario": 3,
+  "conteudo": "Ótimo post! Concordo totalmente."
+}
+```
+
+### **Listar Comentários do Post**
+```http
+GET /posts/{id_post}/comentarios
+Authorization: Bearer <token>
+```
+
+### **Atualizar Comentário**
+```http
+PUT /comentarios/{id_comentario}
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "conteudo": "Comentário atualizado"
+}
+```
+
+### **Deletar Comentário**
+```http
+DELETE /comentarios/{id_comentario}
+Authorization: Bearer <token>
+```
+
 ---
 
 ## 🛍️ **Carrinho de Compras**
@@ -369,6 +494,23 @@ Authorization: Bearer <token>
 
 ## 📊 **Exemplos de Resposta**
 
+### **Sucesso - Post Criado**
+```json
+{
+  "status": true,
+  "status_code": 201,
+  "message": "Post criado com sucesso.",
+  "data": {
+    "id_post": 2,
+    "id_usuario": 3,
+    "titulo": null,
+    "conteudo": "teste 333\n\nfazendo o teste para ver se vai dar certo",
+    "imagem": null,
+    "data_criacao": "2025-11-27T00:18:35.000Z"
+  }
+}
+```
+
 ### **Sucesso - Carrinho**
 ```json
 {
@@ -503,6 +645,7 @@ Authorization: Bearer <token>
 ---
 
 **🎉 Sistema completo implementado com:**
+- ✅ **Rede Social - Posts com comentários e curtidas** *(CORRIGIDO - 27/11/2025)*
 - ✅ Carrinho de compras funcional
 - ✅ Sistema de compras com múltiplos status
 - ✅ Favoritos com notificação de promoções
@@ -511,3 +654,4 @@ Authorization: Bearer <token>
 - ✅ Controle de permissões por tipo de usuário
 - ✅ Integração com IA existente
 - ✅ Triggers automáticos no banco de dados
+- ✅ Segurança com prepared statements (SQL injection prevention)
