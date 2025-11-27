@@ -14,12 +14,14 @@ const insertPost = async function (post) {
         // Usar prepared statement para evitar SQL injection
         let result = await prisma.$executeRaw`
             INSERT INTO tbl_post (
-                id_usuario, titulo, conteudo, imagem
+                id_usuario, titulo, conteudo, imagem, id_produto, id_estabelecimento
             ) VALUES (
                 ${post.id_usuario},
                 ${post.titulo || null},
                 ${post.conteudo || null},
-                ${post.imagem || null}
+                ${post.imagem || null},
+                ${post.id_produto || null},
+                ${post.id_estabelecimento || null}
             )
         `;
 

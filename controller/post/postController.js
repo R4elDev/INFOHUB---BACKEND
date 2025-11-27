@@ -17,10 +17,10 @@ const criarPost = async function (dadosPost, contentType) {
             return MESSAGE.ERROR_CONTENT_TYPE;
         }
 
-        const { id_usuario, conteudo, foto_url, id_produto, id_estabelecimento } = dadosPost;
+        const { id_usuario, conteudo, foto_url, imagem, id_produto, id_estabelecimento } = dadosPost;
         
-        // Padronizar nome do campo para o DAO
-        if (foto_url) {
+        // Padronizar nome do campo para o DAO (aceitar tanto foto_url quanto imagem)
+        if (foto_url && !imagem) {
             dadosPost.imagem = foto_url;
         }
 

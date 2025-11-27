@@ -100,8 +100,12 @@ CREATE TABLE tbl_post (
     titulo VARCHAR(150),
     conteudo TEXT,
     imagem VARCHAR(255),
+    id_produto INT NULL,
+    id_estabelecimento INT NULL,
     data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_post_usuario FOREIGN KEY (id_usuario) REFERENCES tbl_usuario(id_usuario) ON DELETE CASCADE
+    CONSTRAINT fk_post_usuario FOREIGN KEY (id_usuario) REFERENCES tbl_usuario(id_usuario) ON DELETE CASCADE,
+    CONSTRAINT fk_post_produto FOREIGN KEY (id_produto) REFERENCES tbl_produto(id_produto),
+    CONSTRAINT fk_post_estabelecimento FOREIGN KEY (id_estabelecimento) REFERENCES tbl_estabelecimento(id_estabelecimento)
 );
 
 CREATE TABLE tbl_comentario (
