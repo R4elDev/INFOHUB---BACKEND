@@ -1219,7 +1219,20 @@ router.post('/post/:id_post/curtir', verificarToken, bodyParserJson, async (requ
     let dadosBody = request.body;
     dadosBody.id_post = id_post;
 
-    let resultado = await controllerPost.curtirPost(dadosBody, contentType);
+    let id_usuario = dadosBody.id_usuario;
+
+    let resultado = await controllerPost.toggleCurtidaPost(id_post, id_usuario, contentType);
+
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
+// Verificar curtida do usuário (protegido)
+router.get('/post/:id_post/curtida/verificar', verificarToken, async (request, response) => {
+    let id_post = request.params.id_post;
+    let id_usuario = request.query.id_usuario;
+
+    let resultado = await controllerPost.verificarCurtidaUsuario(id_post, id_usuario);
 
     response.status(resultado.status_code);
     response.json(resultado);
