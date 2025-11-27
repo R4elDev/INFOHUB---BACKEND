@@ -14,14 +14,12 @@ const insertPost = async function (post) {
         // Usar prepared statement para evitar SQL injection
         let result = await prisma.$executeRaw`
             INSERT INTO tbl_post (
-                id_usuario, titulo, conteudo, imagem, id_produto, id_estabelecimento
+                id_usuario, titulo, conteudo, imagem
             ) VALUES (
                 ${post.id_usuario},
                 ${post.titulo || null},
                 ${post.conteudo || null},
-                ${post.imagem || null},
-                ${post.id_produto || null},
-                ${post.id_estabelecimento || null}
+                ${post.imagem || null}
             )
         `;
 
@@ -115,7 +113,14 @@ const selectPostById = async function (id_post) {
             WHERE p.id_post = ${id_post}
             GROUP BY p.id_post
         `;
-        return rsPost.length > 0 ? rsPost[0] : false;
+        if (rsPost.length > 0) {
+            return {
+                ...rsPost[0],
+                total_comentarios: Number(rsPost[0].total_comentarios),
+                total_curtidas: Number(rsPost[0].total_curtidas)
+            };
+        }
+        return false;
     } catch (error) {
         console.log("ERRO AO BUSCAR POST POR ID:", error);
         return false;
@@ -140,7 +145,13 @@ const selectPostsUsuario = async function (id_usuario, limite = 10) {
             ORDER BY p.data_criacao DESC
             LIMIT ${limite}
         `;
-        return rsPosts || [];
+        // Converter BigInt para Number
+        const postsFormatados = rsPosts.map(post => ({
+            ...post,
+            total_comentarios: Number(post.total_comentarios),
+            total_curtidas: Number(post.total_curtidas)
+        }));
+        return postsFormatados || [];
     } catch (error) {
         console.log("ERRO AO BUSCAR POSTS DO USUARIO:", error);
         return [];
@@ -164,7 +175,12 @@ const selectAllPosts = async function (limite = 50) {
             ORDER BY p.data_criacao DESC
             LIMIT ${limite}
         `;
-        return rsPosts || [];
+        const postsFormatados = rsPosts.map(post => ({
+            ...post,
+            total_comentarios: Number(post.total_comentarios),
+            total_curtidas: Number(post.total_curtidas)
+        }));
+        return postsFormatados || [];
     } catch (error) {
         console.log("ERRO AO LISTAR TODOS OS POSTS:", error);
         return [];
@@ -298,7 +314,13 @@ const getFeedPosts = async function (limite = 20) {
             ORDER BY p.data_criacao DESC
             LIMIT ${limite}
         `;
-        return rsPosts || [];
+        // Converter BigInt para Number
+        const postsFormatados = rsPosts.map(post => ({
+            ...post,
+            total_comentarios: Number(post.total_comentarios),
+            total_curtidas: Number(post.total_curtidas)
+        }));
+        return postsFormatados || [];
     } catch (error) {
         console.log("ERRO AO BUSCAR FEED:", error);
         return [];
@@ -372,7 +394,7 @@ const countCurtidasPost = async function (id_post) {
     try {
         let sql = `SELECT COUNT(*) as total FROM tbl_curtida WHERE id_post = ${id_post}`;
         let result = await prisma.$queryRawUnsafe(sql);
-        return result[0].total || 0;
+        return Number(result[0].total) || 0;
     } catch (error) {
         console.log("ERRO AO CONTAR CURTIDAS:", error);
         return 0;

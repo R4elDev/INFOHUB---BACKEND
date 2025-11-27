@@ -560,10 +560,12 @@ const toggleCurtidaPost = async function (id_post, id_usuario, contentType) {
         if (resultCurtida) {
             // Notificar o dono do post (se não for ele mesmo curtindo)
             if (resultCurtida.curtido && postExistente.id_usuario != id_usuario) {
-                await notificacaoDAO.notificarCurtidaPost(
-                    postExistente.id_usuario,
-                    id_post
-                );
+                if (typeof notificacaoDAO.notificarCurtidaPost === 'function') {
+                    await notificacaoDAO.notificarCurtidaPost(
+                        postExistente.id_usuario,
+                        id_post
+                    );
+                }
             }
 
             // Contar total de curtidas
