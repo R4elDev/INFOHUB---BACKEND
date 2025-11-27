@@ -9,6 +9,7 @@
 > - ✅ **DAO de posts refatorado com prepared statements**  
 > - ✅ **Segurança contra SQL injection implementada**
 > - ✅ **Campos da tabela tbl_post alinhados com o código**
+> - ✅ **Campo IMAGEM adicionado aos produtos**
 > - ✅ **Sistema funcionando perfeitamente**
 
 ---
@@ -27,6 +28,12 @@ Content-Type: application/json
   "titulo": "Produto Recomendado",
   "imagem": "https://exemplo.com/imagem.jpg"
 }
+```
+
+### **Listar Todos os Posts**
+```http
+GET /posts?limit=50
+Authorization: Bearer <token>
 ```
 
 ### **Listar Feed de Posts**
@@ -126,6 +133,61 @@ Content-Type: application/json
 ### **Deletar Comentário**
 ```http
 DELETE /comentarios/{id_comentario}
+Authorization: Bearer <token>
+```
+
+---
+
+## 📦 **Produtos**
+
+### **Criar Produto**
+```http
+POST /produtos
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "nome": "iPhone 15 Pro",
+  "descricao": "Smartphone Apple mais recente",
+  "id_categoria": 5,
+  "id_estabelecimento": 2,
+  "preco": 8999.99,
+  "imagem": "https://exemplo.com/iphone15pro.jpg"
+}
+```
+
+### **Listar Todos os Produtos**
+```http
+GET /produtos
+# Público - sem autenticação
+```
+
+### **Buscar Produto por ID**
+```http
+GET /produtos/{id_produto}
+# Público - sem autenticação
+```
+
+### **Atualizar Produto**
+```http
+PUT /produtos/{id_produto}
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "id_produto": 10,
+  "nome": "iPhone 15 Pro - Atualizado",
+  "descricao": "Descrição atualizada",
+  "id_categoria": 5,
+  "id_estabelecimento": 2,
+  "preco": 7999.99,
+  "imagem": "https://exemplo.com/nova-imagem.jpg"
+}
+```
+
+### **Deletar Produto**
+```http
+DELETE /produtos/{id_produto}
 Authorization: Bearer <token>
 ```
 
@@ -511,6 +573,29 @@ Authorization: Bearer <token>
 }
 ```
 
+### **Sucesso - Produto com Imagem**
+```json
+{
+  "status": true,
+  "status_code": 200,
+  "produtos": [
+    {
+      "id_produto": 10,
+      "nome": "iPhone 15 Pro",
+      "descricao": "Smartphone Apple mais recente",
+      "id_categoria": 5,
+      "imagem": "https://exemplo.com/iphone15pro.jpg",
+      "categoria": "Eletrônicos",
+      "preco": "8999.99",
+      "id_estabelecimento": 2,
+      "preco_promocional": null,
+      "data_inicio": null,
+      "data_fim": null
+    }
+  ]
+}
+```
+
 ### **Sucesso - Carrinho**
 ```json
 {
@@ -646,6 +731,7 @@ Authorization: Bearer <token>
 
 **🎉 Sistema completo implementado com:**
 - ✅ **Rede Social - Posts com comentários e curtidas** *(CORRIGIDO - 27/11/2025)*
+- ✅ **Produtos com campo imagem** *(ADICIONADO - 27/11/2025)*
 - ✅ Carrinho de compras funcional
 - ✅ Sistema de compras com múltiplos status
 - ✅ Favoritos com notificação de promoções

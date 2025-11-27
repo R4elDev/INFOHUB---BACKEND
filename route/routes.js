@@ -1130,6 +1130,25 @@ router.get('/posts/feed/:page/:limit', verificarToken, async (request, response)
     response.json(resultado);
 });
 
+// Listar todos os posts (protegido)
+router.get('/posts', verificarToken, async (request, response) => {
+    try {
+        let limit = request.query.limit || 50; // Limite padrão de 50 posts
+        let resultado = await controllerPost.listarTodosPosts(limit);
+
+        response.status(resultado.status_code);
+        response.json(resultado);
+    } catch (error) {
+        console.log("ERRO NA ROTA LISTAR TODOS OS POSTS:", error);
+        response.status(500);
+        response.json({
+            status: false,
+            status_code: 500,
+            message: "Erro interno do servidor"
+        });
+    }
+});
+
 // Listar posts do feed sem paginação (protegido)
 router.get('/posts/feed', verificarToken, async (request, response) => {
     let resultado = await controllerPost.listarFeed();
