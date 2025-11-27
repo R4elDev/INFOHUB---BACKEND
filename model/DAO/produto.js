@@ -15,11 +15,12 @@ const insertProduto = async function (produto) {
             // 1. Inserir o produto
             let sqlProduto = `
                 INSERT INTO tbl_produto (
-                    nome, descricao, id_categoria
+                    nome, descricao, id_categoria, imagem
                 ) VALUES (
                     '${produto.nome}',
                     ${produto.descricao ? `'${produto.descricao}'` : 'NULL'},
-                    ${produto.id_categoria}
+                    ${produto.id_categoria},
+                    ${produto.imagem ? `'${produto.imagem}'` : 'NULL'}
                 );
             `;
             
@@ -86,7 +87,8 @@ const updateProduto = async function (produto) {
                 UPDATE tbl_produto SET
                     nome = '${produto.nome}',
                     descricao = ${produto.descricao ? `'${produto.descricao}'` : 'NULL'},
-                    id_categoria = ${produto.id_categoria}
+                    id_categoria = ${produto.id_categoria},
+                    imagem = ${produto.imagem ? `'${produto.imagem}'` : 'NULL'}
                 WHERE id_produto = ${produto.id_produto};
             `;
             await prisma.$executeRawUnsafe(sqlProduto);
@@ -189,7 +191,7 @@ const selectAllProdutos = async function () {
     try {
         let sql = `
             SELECT 
-                p.id_produto, p.nome, p.descricao, p.id_categoria,
+                p.id_produto, p.nome, p.descricao, p.id_categoria, p.imagem,
                 c.nome as categoria,
                 pp.preco, pp.id_estabelecimento,
                 pr.preco_promocional, pr.data_inicio, pr.data_fim
@@ -214,7 +216,7 @@ const selectProdutoById = async function (id_produto) {
     try {
         let sql = `
             SELECT 
-                p.id_produto, p.nome, p.descricao, p.id_categoria,
+                p.id_produto, p.nome, p.descricao, p.id_categoria, p.imagem,
                 c.nome as categoria,
                 pp.preco, pp.id_estabelecimento,
                 pr.preco_promocional, pr.data_inicio, pr.data_fim

@@ -20,6 +20,7 @@ const createProduto = async function (dadosBody, contentType) {
             dadosBody.id_estabelecimento == '' || dadosBody.id_estabelecimento == undefined ||
             dadosBody.preco == '' || dadosBody.preco == undefined
         ) {
+            // Campo imagem é opcional, não precisa validar
             status_code = 400;
             mensagem.message = message.ERROR_REQUIRED_FIELDS;
         } else {
@@ -62,6 +63,7 @@ const updateProduto = async function (dadosBody, contentType) {
             dadosBody.id_estabelecimento == '' || dadosBody.id_estabelecimento == undefined ||
             dadosBody.preco == '' || dadosBody.preco == undefined
         ) {
+            // Campo imagem é opcional, não precisa validar
             status_code = 400;
             mensagem.message = message.ERROR_REQUIRED_FIELDS;
         } else {

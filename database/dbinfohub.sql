@@ -69,6 +69,7 @@ CREATE TABLE tbl_produto (
     nome VARCHAR(120) NOT NULL,
     descricao TEXT,
     id_categoria INT,
+    imagem VARCHAR(255) NULL,
     CONSTRAINT fk_categoria FOREIGN KEY (id_categoria) REFERENCES tbl_categoria(id_categoria)
 );
 
