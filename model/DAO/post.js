@@ -248,25 +248,42 @@ const toggleCurtidaPost = async function (id_post, id_usuario) {
 // ================================ ADD COMMENT =================================
 const adicionarComentario = async function (comentario) {
     try {
-        let result = await prisma.$executeRaw`
+        // Usar queryRawUnsafe para INSERT e pegar o ID inserido
+        let sql = `
             INSERT INTO tbl_comentario (id_post, id_usuario, conteudo)
-            VALUES (${comentario.id_post}, ${comentario.id_usuario}, ${comentario.conteudo})
+            VALUES (${comentario.id_post}, ${comentario.id_usuario}, '${comentario.conteudo}')
         `;
+        
+        let result = await prisma.$executeRawUnsafe(sql);
 
         if (result) {
-            // Buscar o comentário criado
-            let comentarioCriado = await prisma.$queryRaw`
+            // Buscar o comentário criado usando LAST_INSERT_ID()
+            let sqlSelect = `
                 SELECT 
-                    c.*,
+                    c.id_comentario,
+                    c.id_post,
+                    c.id_usuario,
+                    c.conteudo,
+                    c.data_criacao,
                     u.nome as nome_usuario
                 FROM tbl_comentario c
                 INNER JOIN tbl_usuario u ON c.id_usuario = u.id_usuario
-                WHERE c.id_post = ${comentario.id_post} 
-                AND c.id_usuario = ${comentario.id_usuario}
-                ORDER BY c.id_comentario DESC
-                LIMIT 1
+                WHERE c.id_comentario = LAST_INSERT_ID()
             `;
-            return comentarioCriado[0];
+            
+            let comentarioCriado = await prisma.$queryRawUnsafe(sqlSelect);
+            
+            if (comentarioCriado && comentarioCriado.length > 0) {
+                return comentarioCriado[0];
+            }
+            
+            // Fallback: retornar objeto básico se não conseguir buscar
+            return {
+                id_post: comentario.id_post,
+                id_usuario: comentario.id_usuario,
+                conteudo: comentario.conteudo,
+                nome_usuario: 'Usuário'
+            };
         }
         
         return false;

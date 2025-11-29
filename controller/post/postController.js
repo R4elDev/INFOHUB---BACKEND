@@ -400,12 +400,17 @@ const comentarPost = async function (dadosComentario, contentType) {
 
         if (resultComentario) {
             // Notificar o dono do post (se não for ele mesmo comentando)
-            if (postExistente.id_usuario != id_usuario) {
-                await notificacaoDAO.notificarComentarioPost(
-                    postExistente.id_usuario,
-                    id_post,
-                    resultComentario.nome_usuario
-                );
+            // Usar try-catch para não falhar o comentário se a notificação falhar
+            try {
+                if (postExistente.id_usuario != id_usuario && typeof notificacaoDAO.notificarComentarioPost === 'function') {
+                    await notificacaoDAO.notificarComentarioPost(
+                        postExistente.id_usuario,
+                        id_post,
+                        resultComentario.nome_usuario || 'Alguém'
+                    );
+                }
+            } catch (notifError) {
+                console.log("Erro ao enviar notificação de comentário (não crítico):", notifError.message);
             }
 
             return {
