@@ -6,6 +6,7 @@
 
 const MESSAGE = require('../../modulo/config.js');
 const avaliacaoDAO = require('../../model/DAO/avaliacao.js');
+const infocashDAO = require('../../model/DAO/infocash.js');
 
 /**
  * CRIAR AVALIAÇÃO
@@ -63,6 +64,15 @@ const criarAvaliacao = async function (dadosAvaliacao, contentType) {
         let resultAvaliacao = await avaliacaoDAO.insertAvaliacao(dadosAvaliacao);
 
         if (resultAvaliacao) {
+            // Conceder pontos InfoCash por avaliar
+            try {
+                const tipoAcao = id_produto ? 'avaliar_produto' : 'avaliar_estabelecimento';
+                const referenciaId = resultAvaliacao.id_avaliacao || null;
+                await infocashDAO.concederPontosPorAcao(id_usuario, tipoAcao, referenciaId);
+            } catch (infocashError) {
+                console.log("Erro ao conceder pontos InfoCash (não crítico):", infocashError.message);
+            }
+
             return {
                 status: true,
                 status_code: 201,

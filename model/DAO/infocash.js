@@ -17,6 +17,21 @@ const getPrismaClient = () => {
     return prisma;
 };
 
+// Função para converter BigInt para Number (resolve erro de serialização JSON)
+const convertBigIntToNumber = (obj) => {
+    if (obj === null || obj === undefined) return obj;
+    if (typeof obj === 'bigint') return Number(obj);
+    if (Array.isArray(obj)) return obj.map(convertBigIntToNumber);
+    if (typeof obj === 'object') {
+        const converted = {};
+        for (const key in obj) {
+            converted[key] = convertBigIntToNumber(obj[key]);
+        }
+        return converted;
+    }
+    return obj;
+};
+
 // Função para fechar conexão quando necessário
 const closePrismaConnection = async () => {
     if (prisma) {
@@ -106,7 +121,7 @@ const infocashDAO = {
             `;
             
             const rsResumo = await prismaClient.$queryRawUnsafe(sql, idUsuario);
-            return rsResumo || [];
+            return convertBigIntToNumber(rsResumo) || [];
         } catch (error) {
             console.log("ERRO AO BUSCAR RESUMO INFOCASH:", error);
             return [];
@@ -193,7 +208,7 @@ const infocashDAO = {
             `;
             
             const rsRanking = await prismaClient.$queryRawUnsafe(sql, limite);
-            return rsRanking || [];
+            return convertBigIntToNumber(rsRanking) || [];
         } catch (error) {
             console.log("ERRO AO BUSCAR RANKING INFOCASH:", error);
             return [];
@@ -216,7 +231,7 @@ const infocashDAO = {
             `;
             
             const rsEstatisticas = await prismaClient.$queryRawUnsafe(sql);
-            return rsEstatisticas && rsEstatisticas.length > 0 ? rsEstatisticas[0] : null;
+            return rsEstatisticas && rsEstatisticas.length > 0 ? convertBigIntToNumber(rsEstatisticas[0]) : null;
         } catch (error) {
             console.log("ERRO AO BUSCAR ESTATÍSTICAS INFOCASH:", error);
             return null;
@@ -248,6 +263,67 @@ const infocashDAO = {
         } catch (error) {
             console.log("ERRO AO BUSCAR TRANSAÇÕES POR PERÍODO INFOCASH:", error);
             return [];
+        }
+    },
+
+    /**
+     * Conceder pontos por ação do sistema (criar post, comentar, etc)
+     * Função interna usada pelos controllers
+     */
+    concederPontosPorAcao: async (idUsuario, tipoAcao, referenciaId = null) => {
+        try {
+            const prismaClient = getPrismaClient();
+            
+            // Definir pontos por tipo de ação
+            const pontosAcao = {
+                'criar_post': 10,
+                'comentar': 5,
+                'curtir': 2,
+                'compartilhar': 3,
+                'avaliar_produto': 8,
+                'avaliar_estabelecimento': 8,
+                'primeira_compra': 50,
+                'compra': 15,
+                'indicar_amigo': 20,
+                'completar_perfil': 25
+            };
+
+            const pontos = pontosAcao[tipoAcao] || 5;
+            const descricao = {
+                'criar_post': 'Pontos por criar um post',
+                'comentar': 'Pontos por comentar em um post',
+                'curtir': 'Pontos por curtir um post',
+                'compartilhar': 'Pontos por compartilhar um post',
+                'avaliar_produto': 'Pontos por avaliar um produto',
+                'avaliar_estabelecimento': 'Pontos por avaliar um estabelecimento',
+                'primeira_compra': 'Bônus de primeira compra',
+                'compra': 'Pontos por realizar uma compra',
+                'indicar_amigo': 'Pontos por indicar um amigo',
+                'completar_perfil': 'Pontos por completar o perfil'
+            };
+
+            // Inserir transação
+            const sqlInsert = `
+                INSERT INTO tbl_infocash (id_usuario, tipo_acao, pontos, descricao, referencia_id)
+                VALUES (?, ?, ?, ?, ?)
+            `;
+            await prismaClient.$executeRawUnsafe(sqlInsert, idUsuario, tipoAcao, pontos, descricao[tipoAcao] || 'Pontos ganhos', referenciaId || null);
+
+            // Atualizar ou criar saldo
+            const sqlSaldo = `
+                INSERT INTO tbl_saldo_infocash (id_usuario, saldo_total, ultima_atualizacao)
+                VALUES (?, ?, NOW())
+                ON DUPLICATE KEY UPDATE 
+                    saldo_total = saldo_total + ?,
+                    ultima_atualizacao = NOW()
+            `;
+            await prismaClient.$executeRawUnsafe(sqlSaldo, idUsuario, pontos, pontos);
+
+            console.log(`InfoCash: +${pontos} pontos para usuário ${idUsuario} por ${tipoAcao}`);
+            return { success: true, pontos };
+        } catch (error) {
+            console.log("ERRO AO CONCEDER PONTOS POR AÇÃO:", error);
+            return { success: false, error: error.message };
         }
     },
 

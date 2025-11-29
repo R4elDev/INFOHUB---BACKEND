@@ -6,6 +6,9 @@ const { verificarAdmin, verificarAdminOuEstabelecimento, verificarProprietarioOu
 
 const bodyParserJson = bodyParser.json();
 
+// Controller de Endereço Estabelecimento (importado no topo para uso em /estabelecimentos)
+const controllerEnderecoEstabelecimento = require('../controller/enderecoEstabelecimento/enderecoEstabelecimentoController.js');
+
 // ==============================
 // Rotas de Usuário
 // ==============================
@@ -236,9 +239,10 @@ router.delete('/estabelecimento/:id', verificarToken, async (request, response) 
     response.json(resultado);
 });
 
-// Listar todos os estabelecimentos (público)
+// Listar todos os estabelecimentos COM ENDEREÇO E COORDENADAS (público)
 router.get('/estabelecimentos', async (request, response) => {
-    let resultado = await controllerEstabelecimento.getEstabelecimentos();
+    // Usar o novo endpoint que traz endereço junto
+    let resultado = await controllerEnderecoEstabelecimento.listarTodos();
 
     response.status(resultado.status_code || 200);
     response.json(resultado);
@@ -249,6 +253,26 @@ router.get('/estabelecimento/:id', async (request, response) => {
     let id = request.params.id;
 
     let resultado = await controllerEstabelecimento.getEstabelecimentoById(id);
+
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
+// Buscar estabelecimento por ID do USUÁRIO (público) - IMPORTANTE para vincular usuário ao estabelecimento
+router.get('/estabelecimento/usuario/:id_usuario', async (request, response) => {
+    let id_usuario = request.params.id_usuario;
+
+    let resultado = await controllerEstabelecimento.getEstabelecimentoByUsuario(id_usuario);
+
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
+// Buscar estabelecimento por CNPJ (público)
+router.get('/estabelecimento/cnpj/:cnpj', async (request, response) => {
+    let cnpj = request.params.cnpj;
+
+    let resultado = await controllerEstabelecimento.getEstabelecimentoByCnpj(cnpj);
 
     response.status(resultado.status_code);
     response.json(resultado);
@@ -835,8 +859,19 @@ router.get('/notificacoes/:id_usuario/tipo/:tipo', verificarToken, async (reques
 // ==============================
 const controllerAvaliacao = require('../controller/avaliacao/avaliacaoController.js');
 
-// Criar avaliação (protegido)
+// Criar avaliação (protegido) - rota principal
 router.post('/avaliacoes', verificarToken, bodyParserJson, async (request, response) => {
+    let contentType = request.headers['content-type'];
+    let dadosBody = request.body;
+
+    let resultado = await controllerAvaliacao.criarAvaliacao(dadosBody, contentType);
+
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
+// Criar avaliação (protegido) - rota alternativa para compatibilidade
+router.post('/avaliacao', verificarToken, bodyParserJson, async (request, response) => {
     let contentType = request.headers['content-type'];
     let dadosBody = request.body;
 
@@ -1349,6 +1384,89 @@ router.get('/infocash/ranking', verificarToken, async (request, response) => {
 // Buscar estatísticas gerais do sistema (apenas admin)
 router.get('/infocash/estatisticas', verificarAdmin, async (request, response) => {
     await controllerInfocash.getEstatisticas(request, response);
+});
+
+// ==============================
+// Rotas de ENDEREÇO ESTABELECIMENTO
+// ==============================
+
+// Criar/Atualizar endereço do estabelecimento (protegido)
+router.post('/endereco-estabelecimento', verificarToken, bodyParserJson, async (request, response) => {
+    let contentType = request.headers['content-type'];
+    let dadosBody = request.body;
+
+    let resultado = await controllerEnderecoEstabelecimento.criarEnderecoEstabelecimento(dadosBody, contentType);
+
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
+// Atualizar endereço do estabelecimento (protegido)
+router.put('/endereco-estabelecimento/:id_estabelecimento', verificarToken, bodyParserJson, async (request, response) => {
+    let contentType = request.headers['content-type'];
+    let id_estabelecimento = request.params.id_estabelecimento;
+    let dadosBody = request.body;
+    dadosBody.id_estabelecimento = id_estabelecimento;
+
+    let resultado = await controllerEnderecoEstabelecimento.atualizarEnderecoEstabelecimento(dadosBody, contentType);
+
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
+// Buscar endereço do estabelecimento (protegido)
+router.get('/endereco-estabelecimento/:id_estabelecimento', verificarToken, async (request, response) => {
+    let id_estabelecimento = request.params.id_estabelecimento;
+
+    let resultado = await controllerEnderecoEstabelecimento.buscarEnderecoEstabelecimento(id_estabelecimento);
+
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
+// Deletar endereço do estabelecimento (protegido)
+router.delete('/endereco-estabelecimento/:id_estabelecimento', verificarToken, async (request, response) => {
+    let id_estabelecimento = request.params.id_estabelecimento;
+
+    let resultado = await controllerEnderecoEstabelecimento.deletarEnderecoEstabelecimento(id_estabelecimento);
+
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
+// ==============================
+// Rotas de PESQUISA DE ESTABELECIMENTOS
+// ==============================
+
+// Listar todos estabelecimentos com endereço (público)
+router.get('/estabelecimentos/todos', async (request, response) => {
+    let resultado = await controllerEnderecoEstabelecimento.listarTodos();
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
+// Pesquisar estabelecimentos por CEP (público)
+router.get('/estabelecimentos/pesquisar/cep/:cep', async (request, response) => {
+    let cep = request.params.cep;
+    let resultado = await controllerEnderecoEstabelecimento.pesquisarPorCep(cep);
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
+// Pesquisar estabelecimentos por local - cidade, bairro, nome (público)
+router.get('/estabelecimentos/pesquisar/local/:termo', async (request, response) => {
+    let termo = request.params.termo;
+    let resultado = await controllerEnderecoEstabelecimento.pesquisarPorLocal(termo);
+    response.status(resultado.status_code);
+    response.json(resultado);
+});
+
+// Pesquisar estabelecimentos próximos por coordenadas (público)
+router.get('/estabelecimentos/pesquisar/proximos', async (request, response) => {
+    let { latitude, longitude, raio } = request.query;
+    let resultado = await controllerEnderecoEstabelecimento.pesquisarProximos(latitude, longitude, raio);
+    response.status(resultado.status_code);
+    response.json(resultado);
 });
 
 module.exports = router;

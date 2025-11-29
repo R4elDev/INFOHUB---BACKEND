@@ -246,13 +246,14 @@ CREATE TABLE IF NOT EXISTS tbl_avaliacao (
     data_avaliacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_avaliacao_usuario FOREIGN KEY (id_usuario) REFERENCES tbl_usuario(id_usuario),
     CONSTRAINT fk_avaliacao_produto FOREIGN KEY (id_produto) REFERENCES tbl_produto(id_produto),
-    CONSTRAINT fk_avaliacao_estabelecimento FOREIGN KEY (id_estabelecimento) REFERENCES tbl_estabelecimento(id_estabelecimento),
-    CONSTRAINT check_avaliacao_target CHECK (id_produto IS NOT NULL OR id_estabelecimento IS NOT NULL)
+    CONSTRAINT fk_avaliacao_estabelecimento FOREIGN KEY (id_estabelecimento) REFERENCES tbl_estabelecimento(id_estabelecimento)
+    -- CHECK constraint removido pois conflita com foreign keys no MySQL 8.0.16+
+    -- A validação será feita na aplicação
 );
 
 -- Atualizar tabela de notificações para incluir novos tipos
 ALTER TABLE tbl_notificacao 
-MODIFY COLUMN tipo ENUM('promocao','alerta','social','compra','carrinho');
+MODIFY COLUMN tipo ENUM('promocao','alerta','social','compra','carrinho','comentario','curtida');
 
 -- =============================================
 -- TABELA INFOCASH - SISTEMA DE PONTOS
@@ -262,12 +263,15 @@ MODIFY COLUMN tipo ENUM('promocao','alerta','social','compra','carrinho');
 CREATE TABLE IF NOT EXISTS tbl_infocash (
     id_transacao INT AUTO_INCREMENT PRIMARY KEY,
     id_usuario INT NOT NULL,
-    tipo_acao ENUM('avaliacao_promocao','cadastro_produto','cadastro_preco_produto','avaliacao_empresa') NOT NULL,
+    tipo_acao VARCHAR(50) NOT NULL, -- criar_post, comentar, curtir, compartilhar, avaliar_produto, avaliar_estabelecimento, compra, etc
     pontos INT NOT NULL,
     descricao VARCHAR(255) NOT NULL,
     data_transacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    referencia_id INT NULL, -- ID da avaliação, produto ou empresa relacionada
-    CONSTRAINT fk_infocash_usuario FOREIGN KEY (id_usuario) REFERENCES tbl_usuario(id_usuario) ON DELETE CASCADE
+    referencia_id INT NULL, -- ID da avaliação, produto, post ou empresa relacionada
+    CONSTRAINT fk_infocash_usuario FOREIGN KEY (id_usuario) REFERENCES tbl_usuario(id_usuario) ON DELETE CASCADE,
+    INDEX idx_infocash_usuario (id_usuario),
+    INDEX idx_infocash_tipo (tipo_acao),
+    INDEX idx_infocash_data (data_transacao)
 );
 
 -- Tabela para armazenar saldo atual de cada usuário (para performance)
@@ -278,18 +282,22 @@ CREATE TABLE IF NOT EXISTS tbl_saldo_infocash (
     CONSTRAINT fk_saldo_usuario FOREIGN KEY (id_usuario) REFERENCES tbl_usuario(id_usuario) ON DELETE CASCADE
 );
 
+-- Inserir saldo inicial para usuarios existentes
+INSERT IGNORE INTO tbl_saldo_infocash (id_usuario, saldo_total)
+SELECT id_usuario, 0 FROM tbl_usuario;
+
 -- =============================================
 -- ÍNDICES ADICIONAIS PARA PERFORMANCE
 -- (FKs já criam índices automaticamente no MySQL)
 -- =============================================
 
--- Índices compostos e de busca específica
+-- Índices compostos e de busca específica (ignorar erro se já existir)
+-- DROP INDEX IF EXISTS idx_compra_data ON tbl_compra;
 CREATE INDEX idx_compra_data ON tbl_compra(data_compra);
 CREATE INDEX idx_compra_status ON tbl_compra(status_compra);
-CREATE INDEX idx_infocash_tipo ON tbl_infocash(tipo_acao);
-CREATE INDEX idx_infocash_data ON tbl_infocash(data_transacao);
 CREATE INDEX idx_promocao_datas ON tbl_promocao(data_inicio, data_fim);
 CREATE INDEX idx_notificacao_lida ON tbl_notificacao(id_usuario, lida);
+CREATE INDEX idx_saldo_total ON tbl_saldo_infocash(saldo_total DESC);
 
 -- =============================================
 -- TRIGGERS PARA NOTIFICAÇÕES AUTOMÁTICAS
@@ -304,7 +312,7 @@ BEGIN
     INSERT INTO tbl_notificacao (id_usuario, mensagem, tipo)
     SELECT 
         f.id_usuario,
-        CONCAT('🔥 Seu produto favorito "', p.nome, '" está em promoção por R$ ', NEW.preco_promocional, '!'),
+        CONCAT('[PROMOCAO] Seu produto favorito "', p.nome, '" esta em promocao por R$ ', NEW.preco_promocional, '!'),
         'promocao'
     FROM tbl_favorito f
     INNER JOIN tbl_produto p ON f.id_produto = p.id_produto
@@ -344,18 +352,24 @@ BEGIN
             SET pontos_ganhos = 15; -- 15 pontos por avaliar produto em promoção
             
             INSERT INTO tbl_infocash (id_usuario, tipo_acao, pontos, descricao, referencia_id)
-            VALUES (NEW.id_usuario, 'avaliacao_promocao', pontos_ganhos, 
-                   'Pontos ganhos por avaliar produto em promoção', NEW.id_avaliacao);
+            VALUES (NEW.id_usuario, 'avaliar_produto', pontos_ganhos, 
+                   'Pontos por avaliar produto em promocao', NEW.id_avaliacao);
+        ELSE
+            SET pontos_ganhos = 8; -- 8 pontos por avaliar produto normal
+            
+            INSERT INTO tbl_infocash (id_usuario, tipo_acao, pontos, descricao, referencia_id)
+            VALUES (NEW.id_usuario, 'avaliar_produto', pontos_ganhos, 
+                   'Pontos por avaliar produto', NEW.id_avaliacao);
         END IF;
     END IF;
     
     -- Se avaliou um estabelecimento
     IF NEW.id_estabelecimento IS NOT NULL THEN
-        SET pontos_ganhos = 10; -- 10 pontos por avaliar estabelecimento
+        SET pontos_ganhos = 8; -- 8 pontos por avaliar estabelecimento
         
         INSERT INTO tbl_infocash (id_usuario, tipo_acao, pontos, descricao, referencia_id)
-        VALUES (NEW.id_usuario, 'avaliacao_empresa', pontos_ganhos, 
-               'Pontos ganhos por avaliar estabelecimento', NEW.id_avaliacao);
+        VALUES (NEW.id_usuario, 'avaliar_estabelecimento', pontos_ganhos, 
+               'Pontos por avaliar estabelecimento', NEW.id_avaliacao);
     END IF;
     
     -- Atualizar saldo do usuário
@@ -382,8 +396,8 @@ BEGIN
     
     IF id_usuario_estabelecimento IS NOT NULL THEN
         INSERT INTO tbl_infocash (id_usuario, tipo_acao, pontos, descricao, referencia_id)
-        VALUES (id_usuario_estabelecimento, 'cadastro_preco_produto', pontos_ganhos, 
-               'Pontos ganhos por cadastrar preço de produto', NEW.id_preco);
+        VALUES (id_usuario_estabelecimento, 'cadastro_preco', pontos_ganhos, 
+               'Pontos por cadastrar preco de produto', NEW.id_preco);
         
         -- Atualizar saldo do usuário
         INSERT INTO tbl_saldo_infocash (id_usuario, saldo_total)
@@ -437,12 +451,17 @@ SELECT
     s.saldo_total,
     s.ultima_atualizacao,
     COUNT(i.id_transacao) as total_transacoes,
-    COUNT(CASE WHEN i.tipo_acao = 'avaliacao_promocao' THEN 1 END) as avaliacoes_promocao,
-    COUNT(CASE WHEN i.tipo_acao = 'cadastro_produto' THEN 1 END) as cadastros_produto,
-    COUNT(CASE WHEN i.tipo_acao = 'avaliacao_empresa' THEN 1 END) as avaliacoes_empresa,
-    SUM(CASE WHEN i.tipo_acao = 'avaliacao_promocao' THEN i.pontos ELSE 0 END) as pontos_avaliacoes_promocao,
-    SUM(CASE WHEN i.tipo_acao = 'cadastro_produto' THEN i.pontos ELSE 0 END) as pontos_cadastros_produto,
-    SUM(CASE WHEN i.tipo_acao = 'avaliacao_empresa' THEN i.pontos ELSE 0 END) as pontos_avaliacoes_empresa
+    COUNT(CASE WHEN i.tipo_acao = 'criar_post' THEN 1 END) as total_posts,
+    COUNT(CASE WHEN i.tipo_acao = 'comentar' THEN 1 END) as total_comentarios,
+    COUNT(CASE WHEN i.tipo_acao = 'curtir' THEN 1 END) as total_curtidas,
+    COUNT(CASE WHEN i.tipo_acao = 'avaliar_produto' THEN 1 END) as avaliacoes_produto,
+    COUNT(CASE WHEN i.tipo_acao = 'avaliar_estabelecimento' THEN 1 END) as avaliacoes_estabelecimento,
+    COUNT(CASE WHEN i.tipo_acao = 'compra' THEN 1 END) as total_compras,
+    SUM(CASE WHEN i.tipo_acao = 'criar_post' THEN i.pontos ELSE 0 END) as pontos_posts,
+    SUM(CASE WHEN i.tipo_acao = 'comentar' THEN i.pontos ELSE 0 END) as pontos_comentarios,
+    SUM(CASE WHEN i.tipo_acao = 'curtir' THEN i.pontos ELSE 0 END) as pontos_curtidas,
+    SUM(CASE WHEN i.tipo_acao IN ('avaliar_produto', 'avaliar_estabelecimento') THEN i.pontos ELSE 0 END) as pontos_avaliacoes,
+    SUM(CASE WHEN i.tipo_acao = 'compra' THEN i.pontos ELSE 0 END) as pontos_compras
 FROM tbl_saldo_infocash s
 INNER JOIN tbl_usuario u ON s.id_usuario = u.id_usuario
 LEFT JOIN tbl_infocash i ON s.id_usuario = i.id_usuario
