@@ -264,6 +264,36 @@ const notificarCarrinhoAbandonado = async function (id_usuario, total_itens) {
     }
 };
 
+// Notificar comentário em post
+const notificarComentarioPost = async function (id_usuario_dono_post, id_post, nome_usuario_comentou) {
+    try {
+        const mensagem = `💬 ${nome_usuario_comentou} comentou no seu post!`;
+        return await insertNotificacao({
+            id_usuario: id_usuario_dono_post,
+            mensagem,
+            tipo: 'comentario'
+        });
+    } catch (error) {
+        console.log("ERRO AO NOTIFICAR COMENTÁRIO POST:", error);
+        return false;
+    }
+};
+
+// Notificar curtida em post
+const notificarCurtidaPost = async function (id_usuario_dono_post, id_post) {
+    try {
+        const mensagem = `❤️ Alguém curtiu seu post!`;
+        return await insertNotificacao({
+            id_usuario: id_usuario_dono_post,
+            mensagem,
+            tipo: 'curtida'
+        });
+    } catch (error) {
+        console.log("ERRO AO NOTIFICAR CURTIDA POST:", error);
+        return false;
+    }
+};
+
 // ================================ EXPORTS =================================
 module.exports = {
     insertNotificacao,
@@ -279,5 +309,7 @@ module.exports = {
     notificarPromocaoFavorito,
     notificarNovaCompra,
     notificarStatusCompra,
-    notificarCarrinhoAbandonado
+    notificarCarrinhoAbandonado,
+    notificarComentarioPost,
+    notificarCurtidaPost
 };

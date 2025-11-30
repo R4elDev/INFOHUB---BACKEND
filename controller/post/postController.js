@@ -7,6 +7,7 @@
 const MESSAGE = require('../../modulo/config.js');
 const postDAO = require('../../model/DAO/post.js');
 const notificacaoDAO = require('../../model/DAO/notificacao.js');
+const infocashDAO = require('../../model/DAO/infocash.js');
 
 /**
  * CRIAR NOVO POST
@@ -43,6 +44,13 @@ const criarPost = async function (dadosPost, contentType) {
         let resultPost = await postDAO.insertPost(dadosPost);
 
         if (resultPost) {
+            // Conceder pontos InfoCash por criar post
+            try {
+                await infocashDAO.concederPontosPorAcao(id_usuario, 'criar_post', resultPost.id_post);
+            } catch (infocashError) {
+                console.log("Erro ao conceder pontos InfoCash (não crítico):", infocashError.message);
+            }
+
             return {
                 status: true,
                 status_code: 201,
@@ -400,12 +408,24 @@ const comentarPost = async function (dadosComentario, contentType) {
 
         if (resultComentario) {
             // Notificar o dono do post (se não for ele mesmo comentando)
-            if (postExistente.id_usuario != id_usuario) {
-                await notificacaoDAO.notificarComentarioPost(
-                    postExistente.id_usuario,
-                    id_post,
-                    resultComentario.nome_usuario
-                );
+            // Usar try-catch para não falhar o comentário se a notificação falhar
+            try {
+                if (postExistente.id_usuario != id_usuario && typeof notificacaoDAO.notificarComentarioPost === 'function') {
+                    await notificacaoDAO.notificarComentarioPost(
+                        postExistente.id_usuario,
+                        id_post,
+                        resultComentario.nome_usuario || 'Alguém'
+                    );
+                }
+            } catch (notifError) {
+                console.log("Erro ao enviar notificação de comentário (não crítico):", notifError.message);
+            }
+
+            // Conceder pontos InfoCash por comentar
+            try {
+                await infocashDAO.concederPontosPorAcao(id_usuario, 'comentar', id_post);
+            } catch (infocashError) {
+                console.log("Erro ao conceder pontos InfoCash (não crítico):", infocashError.message);
             }
 
             return {
@@ -560,11 +580,22 @@ const toggleCurtidaPost = async function (id_post, id_usuario, contentType) {
         if (resultCurtida) {
             // Notificar o dono do post (se não for ele mesmo curtindo)
             if (resultCurtida.curtido && postExistente.id_usuario != id_usuario) {
-                if (typeof notificacaoDAO.notificarCurtidaPost === 'function') {
-                    await notificacaoDAO.notificarCurtidaPost(
-                        postExistente.id_usuario,
-                        id_post
-                    );
+                try {
+                    if (typeof notificacaoDAO.notificarCurtidaPost === 'function') {
+                        await notificacaoDAO.notificarCurtidaPost(
+                            postExistente.id_usuario,
+                            id_post
+                        );
+                    }
+                } catch (notifError) {
+                    console.log("Erro ao enviar notificação de curtida (não crítico):", notifError.message);
+                }
+
+                // Conceder pontos InfoCash por curtir (apenas quando curte, não quando descurte)
+                try {
+                    await infocashDAO.concederPontosPorAcao(id_usuario, 'curtir', id_post);
+                } catch (infocashError) {
+                    console.log("Erro ao conceder pontos InfoCash (não crítico):", infocashError.message);
                 }
             }
 

@@ -120,6 +120,7 @@ model Produto {
   nome         String   @db.VarChar(120)
   descricao    String?  @db.Text
   id_categoria Int?
+  imagem       String?  @db.VarChar(255)
 
   // Relacionamentos
   categoria        Categoria?     @relation(fields: [id_categoria], references: [id_categoria])
@@ -401,4 +402,28 @@ enum StatusCompra {
   cancelada
 
   @@map("status_compra")
+}
+
+// =============================================
+// TABELAS INFOCASH - SISTEMA DE PONTOS
+// =============================================
+
+model InfoCash {
+  id_transacao   Int      @id @default(autoincrement())
+  id_usuario     Int
+  tipo_acao      String   @db.VarChar(50)
+  pontos         Int
+  descricao      String   @db.VarChar(255)
+  referencia_id  Int?
+  data_transacao DateTime @default(now()) @db.Timestamp(0)
+
+  @@map("tbl_infocash")
+}
+
+model SaldoInfoCash {
+  id_usuario         Int      @id @unique
+  saldo_total        Int      @default(0)
+  ultima_atualizacao DateTime @default(now()) @updatedAt @db.Timestamp(0)
+
+  @@map("tbl_saldo_infocash")
 }

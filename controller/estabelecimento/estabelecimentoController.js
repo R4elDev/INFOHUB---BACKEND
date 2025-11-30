@@ -179,10 +179,72 @@ const getEstabelecimentoById = async function (id) {
     };
 }
 
+// ====================== GET BY USUARIO ======================
+const getEstabelecimentoByUsuario = async function (id_usuario) {
+    let status = false;
+    let status_code;
+    let mensagem = {};
+
+    if (id_usuario == '' || id_usuario == undefined || isNaN(id_usuario)) {
+        status_code = 400;
+        mensagem.message = message.ERROR_INVALID_ID;
+    } else {
+        let dados = await estabelecimentoDAO.selectEstabelecimentoByUsuario(id_usuario);
+
+        if (dados) {
+            status = true;
+            status_code = 200;
+            mensagem = dados;
+        } else {
+            status_code = 404;
+            mensagem.message = "Nenhum estabelecimento encontrado para este usuário.";
+        }
+    }
+
+    return {
+        status: status,
+        status_code: status_code,
+        estabelecimento: status ? mensagem : null,
+        message: status ? null : mensagem.message
+    };
+}
+
+// ====================== GET BY CNPJ ======================
+const getEstabelecimentoByCnpj = async function (cnpj) {
+    let status = false;
+    let status_code;
+    let mensagem = {};
+
+    if (!cnpj || cnpj == '') {
+        status_code = 400;
+        mensagem.message = "CNPJ é obrigatório.";
+    } else {
+        let dados = await estabelecimentoDAO.selectEstabelecimentoByCnpj(cnpj);
+
+        if (dados) {
+            status = true;
+            status_code = 200;
+            mensagem = dados;
+        } else {
+            status_code = 404;
+            mensagem.message = "Nenhum estabelecimento encontrado com este CNPJ.";
+        }
+    }
+
+    return {
+        status: status,
+        status_code: status_code,
+        estabelecimento: status ? mensagem : null,
+        message: status ? null : mensagem.message
+    };
+}
+
 module.exports = {
     createEstabelecimento,
     updateEstabelecimento,
     deleteEstabelecimento,
     getEstabelecimentos,
-    getEstabelecimentoById
+    getEstabelecimentoById,
+    getEstabelecimentoByUsuario,
+    getEstabelecimentoByCnpj
 }

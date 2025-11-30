@@ -7,6 +7,11 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
+// Converter BigInt para Number (problema comum com Prisma + MySQL)
+BigInt.prototype.toJSON = function() {
+    return Number(this);
+};
+
 // ================================ INSERT =================================
 const insertItemCarrinho = async function (item) {
     try {
@@ -115,13 +120,14 @@ const selectCarrinhoUsuario = async function (id_usuario) {
                 c.data_adicionado,
                 p.nome as nome_produto,
                 p.descricao,
+                p.imagem,
                 cat.nome as categoria,
                 -- Pegar o menor preço atual do produto
-                (SELECT MIN(pp.preco) 
+                CAST((SELECT MIN(pp.preco) 
                  FROM tbl_precoProduto pp 
-                 WHERE pp.id_produto = c.id_produto) as preco_atual,
+                 WHERE pp.id_produto = c.id_produto) AS DECIMAL(10,2)) as preco_atual,
                 -- Pegar promoção ativa se existir
-                pr.preco_promocional,
+                CAST(pr.preco_promocional AS DECIMAL(10,2)) as preco_promocional,
                 pr.data_fim as promocao_valida_ate
             FROM tbl_carrinho c
             INNER JOIN tbl_produto p ON c.id_produto = p.id_produto
@@ -147,7 +153,8 @@ const selectItemCarrinho = async function (id_usuario, id_produto) {
             SELECT 
                 c.*,
                 p.nome as nome_produto,
-                p.descricao
+                p.descricao,
+                p.imagem
             FROM tbl_carrinho c
             INNER JOIN tbl_produto p ON c.id_produto = p.id_produto
             WHERE c.id_usuario = ${id_usuario} 
@@ -166,13 +173,16 @@ const countItensCarrinho = async function (id_usuario) {
     try {
         let sql = `
             SELECT 
-                COUNT(*) as total_itens,
-                SUM(quantidade) as total_produtos
+                CAST(COUNT(*) AS UNSIGNED) as total_itens,
+                CAST(COALESCE(SUM(quantidade), 0) AS UNSIGNED) as total_produtos
             FROM tbl_carrinho 
             WHERE id_usuario = ${id_usuario}
         `;
         let result = await prisma.$queryRawUnsafe(sql);
-        return result && result.length > 0 ? result[0] : { total_itens: 0, total_produtos: 0 };
+        return result && result.length > 0 ? {
+            total_itens: Number(result[0].total_itens),
+            total_produtos: Number(result[0].total_produtos)
+        } : { total_itens: 0, total_produtos: 0 };
     } catch (error) {
         console.log("ERRO AO CONTAR ITENS DO CARRINHO:", error);
         return { total_itens: 0, total_produtos: 0 };
@@ -184,7 +194,7 @@ const calcularTotalCarrinho = async function (id_usuario) {
     try {
         let sql = `
             SELECT 
-                SUM(
+                CAST(SUM(
                     c.quantidade * 
                     COALESCE(
                         pr.preco_promocional,
@@ -192,7 +202,7 @@ const calcularTotalCarrinho = async function (id_usuario) {
                          FROM tbl_precoProduto pp 
                          WHERE pp.id_produto = c.id_produto)
                     )
-                ) as valor_total
+                ) AS DECIMAL(10,2)) as valor_total
             FROM tbl_carrinho c
             INNER JOIN tbl_produto p ON c.id_produto = p.id_produto
             LEFT JOIN tbl_promocao pr ON p.id_produto = pr.id_produto 
@@ -201,7 +211,7 @@ const calcularTotalCarrinho = async function (id_usuario) {
             WHERE c.id_usuario = ${id_usuario}
         `;
         let result = await prisma.$queryRawUnsafe(sql);
-        return result && result.length > 0 ? (result[0].valor_total || 0) : 0;
+        return result && result.length > 0 ? Number(result[0].valor_total || 0) : 0;
     } catch (error) {
         console.log("ERRO AO CALCULAR TOTAL DO CARRINHO:", error);
         return 0;

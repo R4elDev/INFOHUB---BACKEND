@@ -152,7 +152,8 @@ const selectEstabelecimentoById = async function (id_estabelecimento) {
         if (rsEstabelecimento && rsEstabelecimento.length > 0) {
             return rsEstabelecimento.map(estabelecimento => ({
                 ...estabelecimento,
-                id_estabelecimento: Number(estabelecimento.id_estabelecimento)
+                id_estabelecimento: Number(estabelecimento.id_estabelecimento),
+                id_usuario: Number(estabelecimento.id_usuario)
             }));
         }
 
@@ -164,10 +165,95 @@ const selectEstabelecimentoById = async function (id_estabelecimento) {
     }
 }
 
+// ================================ SELECT BY USUARIO =================================
+const selectEstabelecimentoByUsuario = async function (id_usuario) {
+    try {
+        let sql = `
+            SELECT 
+                e.*,
+                ed.cep,
+                ed.logradouro,
+                ed.numero,
+                ed.complemento,
+                ed.bairro,
+                ed.cidade,
+                ed.estado,
+                ed.latitude,
+                ed.longitude
+            FROM tbl_estabelecimento e
+            LEFT JOIN tbl_enderecoEstabelecimento ed ON e.id_estabelecimento = ed.id_estabelecimento
+            WHERE e.id_usuario = ${id_usuario}
+            ORDER BY e.id_estabelecimento DESC
+            LIMIT 1;
+        `;
+
+        let rsEstabelecimento = await prisma.$queryRawUnsafe(sql);
+
+        // Converter BigInt para Number
+        if (rsEstabelecimento && rsEstabelecimento.length > 0) {
+            return {
+                ...rsEstabelecimento[0],
+                id_estabelecimento: Number(rsEstabelecimento[0].id_estabelecimento),
+                id_usuario: Number(rsEstabelecimento[0].id_usuario)
+            };
+        }
+
+        return false;
+
+    } catch (error) {
+        console.error("ERRO AO BUSCAR ESTABELECIMENTO POR USUARIO:", error);
+        return false;
+    }
+}
+
+// ================================ SELECT BY CNPJ =================================
+const selectEstabelecimentoByCnpj = async function (cnpj) {
+    try {
+        // Remove caracteres não numéricos do CNPJ
+        const cnpjLimpo = cnpj.replace(/\D/g, '');
+        
+        let sql = `
+            SELECT 
+                e.*,
+                ed.cep,
+                ed.logradouro,
+                ed.numero,
+                ed.complemento,
+                ed.bairro,
+                ed.cidade,
+                ed.estado,
+                ed.latitude,
+                ed.longitude
+            FROM tbl_estabelecimento e
+            LEFT JOIN tbl_enderecoEstabelecimento ed ON e.id_estabelecimento = ed.id_estabelecimento
+            WHERE REPLACE(REPLACE(REPLACE(e.cnpj, '.', ''), '/', ''), '-', '') = '${cnpjLimpo}'
+            LIMIT 1;
+        `;
+
+        let rsEstabelecimento = await prisma.$queryRawUnsafe(sql);
+
+        if (rsEstabelecimento && rsEstabelecimento.length > 0) {
+            return {
+                ...rsEstabelecimento[0],
+                id_estabelecimento: Number(rsEstabelecimento[0].id_estabelecimento),
+                id_usuario: Number(rsEstabelecimento[0].id_usuario)
+            };
+        }
+
+        return false;
+
+    } catch (error) {
+        console.error("ERRO AO BUSCAR ESTABELECIMENTO POR CNPJ:", error);
+        return false;
+    }
+}
+
 module.exports = {
     insertEstabelecimento,
     updateEstabelecimento,
     deleteEstabelecimento,
     selectAllEstabelecimentos,
-    selectEstabelecimentoById
+    selectEstabelecimentoById,
+    selectEstabelecimentoByUsuario,
+    selectEstabelecimentoByCnpj
 }
