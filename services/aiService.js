@@ -35,12 +35,19 @@ async function perguntarIA(mensagem, contexto = '') {
   }
 
   // 2. Usar apenas Groq API - tentar todos os modelos
+  console.log(`🔍 Iniciando busca de resposta para: "${mensagem.substring(0, 50)}..."`);
+  console.log(`📊 Contexto fornecido: ${contexto.length} caracteres`);
+  
   for (let i = 0; i < MODELS.length; i++) {
     const modelo = MODELS[i];
     
     try {
-      console.log(`🤖 Tentando modelo: ${modelo}`);
+      console.log(`🤖 [${i+1}/${MODELS.length}] Tentando modelo: ${modelo}`);
+      const inicioTempo = Date.now();
       const resposta = await tentarGroq(mensagem, contexto, modelo);
+      const tempoDecorrido = Date.now() - inicioTempo;
+      
+      console.log(`✅ Sucesso com ${modelo} em ${tempoDecorrido}ms`);
       
       // Cache da resposta bem-sucedida
       responseCache.set(cacheKey, resposta);
@@ -48,11 +55,12 @@ async function perguntarIA(mensagem, contexto = '') {
       return {
         resposta,
         fonte: `groq_${modelo}`,
-        tempo_resposta: 'real-time'
+        tempo_resposta: `${tempoDecorrido}ms`
       };
       
     } catch (error) {
-      console.log(`❌ Falha no modelo ${modelo}:`, error.message);
+      console.error(`❌ Falha no modelo ${modelo}:`, error.message);
+      console.error(`   Tipo de erro:`, error.response?.status || 'Conexão/Timeout');
       
       // Se for rate limit, aguardar um pouco antes do próximo modelo
       if (error.message.includes('rate_limit')) {
@@ -60,9 +68,19 @@ async function perguntarIA(mensagem, contexto = '') {
         await sleep(5000);
       }
       
-      // Se for o último modelo e falhou, lançar erro
+      // Se for o último modelo e falhou, retornar fallback local
       if (i === MODELS.length - 1) {
-        throw new Error(`Todos os modelos Groq falharam. Último erro: ${error.message}`);
+        console.error('❌ TODOS OS MODELOS GROQ FALHARAM');
+        console.error('Último erro:', error.message);
+        console.error('Verifique sua GROQ_API_KEY e conexão com internet');
+        
+        // Retornar resposta de fallback local
+        return {
+          resposta: 'Desculpe, estou com dificuldades para me conectar ao servidor de IA no momento. Por favor, tente novamente em alguns instantes.',
+          fonte: 'fallback_local',
+          tempo_resposta: 'N/A',
+          erro: error.message
+        };
       }
       
       // Continuar para o próximo modelo
@@ -75,7 +93,8 @@ async function perguntarIA(mensagem, contexto = '') {
 // 🚀 TENTAR GROQ COM MODELO ESPECÍFICO
 // ====================================
 async function tentarGroq(mensagem, contexto, modelo) {
-  const systemMessage = `Você é um assistente do InfoHub. ${contexto}
+  try {
+    const systemMessage = `Você é um assistente do InfoHub. ${contexto}
 
 INSTRUÇÕES:
 - Seja preciso e direto
@@ -83,27 +102,48 @@ INSTRUÇÕES:
 - Formate números legíveis (ex: R$ 10,50)
 - Para contagens, forneça números exatos`;
 
-  const response = await axios.post(
-    GROQ_API_URL,
-    {
-      model: modelo,
-      messages: [
-        { role: 'system', content: systemMessage },
-        { role: 'user', content: mensagem }
-      ],
-      max_tokens: 500, // Limitar tokens para economizar
-      temperature: 0.3 // Respostas mais consistentes
-    },
-    {
-      headers: {
-        'Authorization': `Bearer ${GROQ_API_KEY}`,
-        'Content-Type': 'application/json'
+    console.log(`   📡 Conectando com Groq API...`);
+    console.log(`   🔑 API Key configurada: ${GROQ_API_KEY ? 'Sim' : 'NÃO - PROBLEMA!'}`);
+    
+    const response = await axios.post(
+      GROQ_API_URL,
+      {
+        model: modelo,
+        messages: [
+          { role: 'system', content: systemMessage },
+          { role: 'user', content: mensagem }
+        ],
+        max_tokens: 500, // Limitar tokens para economizar
+        temperature: 0.3 // Respostas mais consistentes
       },
-      timeout: 30000 // 30 segundos timeout
-    }
-  );
+      {
+        headers: {
+          'Authorization': `Bearer ${GROQ_API_KEY}`,
+          'Content-Type': 'application/json'
+        },
+        timeout: 30000 // 30 segundos timeout
+      }
+    );
 
-  return response.data.choices[0].message.content;
+    console.log(`   ✅ Resposta recebida com sucesso`);
+    return response.data.choices[0].message.content;
+    
+  } catch (error) {
+    // Melhorar detalhes do erro
+    if (error.response) {
+      // Erro da API do Groq
+      console.error(`   ⚠️  Erro da API Groq [${error.response.status}]:`, error.response.data);
+      throw new Error(`Groq API Error ${error.response.status}: ${JSON.stringify(error.response.data)}`);
+    } else if (error.request) {
+      // Erro de conexão
+      console.error(`   🌐 Erro de conexão - não conseguiu alcançar Groq API`);
+      throw new Error('Erro de conexão com Groq API - verifique sua internet');
+    } else {
+      // Outro tipo de erro
+      console.error(`   ❓ Erro desconhecido:`, error.message);
+      throw error;
+    }
+  }
 }
 
 
